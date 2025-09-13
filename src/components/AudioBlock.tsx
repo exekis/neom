@@ -1,6 +1,6 @@
 "use client";
 
-import { AudioTrack } from "../app/page";
+import { AudioTrack } from "../types/AudioTrack";
 import { WaveformPattern } from "./WaveformPattern";
 
 interface AudioBlockProps {

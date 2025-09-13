@@ -12,7 +12,11 @@
       "Bash(findstr:*)",
       "Read(//c/**)",
       "Bash(npm run build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm run lint)",
+      "Bash(npm install:*)",
+      "Bash(move \"src/app/sign-in/[[...sign-in]]/page.tsx\" \"src/app/sign-in/[[...sign-in]]/page.tsx.tmp\")",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

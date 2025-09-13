@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import { AudioTrack } from "../app/page";
+import { AudioTrack } from "../types/AudioTrack";
 import { TimelineMarkers } from "./TimelineMarkers";
 import { AudioBlock } from "./AudioBlock";
+import { PlaybackCursor } from "./PlaybackCursor";
 import { useDragHandler } from "../hooks/useDragHandler";
 
 interface TrackRowProps {
@@ -13,6 +14,8 @@ interface TrackRowProps {
   onTrackClick: (index: number) => void;
   onRemoveTrack: (trackId: string) => void;
   onUpdateTrackStartTime: (trackId: string, newStartTime: number) => void;
+  currentTime: number;
+  isPlaying: boolean;
 }
 
 const PIXELS_PER_SECOND = 60;
@@ -23,7 +26,9 @@ export function TrackRow({
   isSelected,
   onTrackClick,
   onRemoveTrack,
-  onUpdateTrackStartTime
+  onUpdateTrackStartTime,
+  currentTime,
+  isPlaying
 }: TrackRowProps) {
   const timelineRef = useRef<HTMLDivElement>(null);
   const { isDragging, handleMouseDown } = useDragHandler({
@@ -36,17 +41,22 @@ export function TrackRow({
   const trackNumber = index + 1;
 
   return (
-    <div className="flex items-center border-b border-gray-200 last:border-b-0">
-      <div className="w-32 p-4 bg-gray-50 border-r border-gray-200 flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-600">
-          Track {trackNumber}
-        </span>
+    <div className="flex items-center hover:bg-purple-50/50 transition-colors duration-200">
+      <div className="w-40 p-6 bg-gradient-to-r from-slate-50 to-purple-50 border-r border-purple-100 flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-slate-700 mb-1">
+            Track {trackNumber}
+          </span>
+          <span className="text-xs text-slate-500 truncate max-w-24" title={track.name}>
+            {track.name}
+          </span>
+        </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onRemoveTrack(track.id);
           }}
-          className="text-red-500 hover:text-red-700 text-xs ml-2"
+          className="text-red-400 hover:text-red-600 hover:bg-red-50 w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all duration-200"
           title="Remove track"
         >
           ✕
@@ -54,7 +64,7 @@ export function TrackRow({
       </div>
 
       <div
-        className="flex-1 p-4 relative"
+        className="flex-1 p-6 relative cursor-pointer"
         onClick={() => onTrackClick(index)}
       >
         <TimelineMarkers pixelsPerSecond={PIXELS_PER_SECOND} />
@@ -68,6 +78,12 @@ export function TrackRow({
             onMouseDown={handleMouseDown}
             onTrackClick={onTrackClick}
             index={index}
+          />
+
+          <PlaybackCursor
+            currentTime={currentTime}
+            pixelsPerSecond={PIXELS_PER_SECOND}
+            isVisible={isPlaying}
           />
 
           {track.startTime > 0 && (

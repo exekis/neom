@@ -6,7 +6,7 @@ interface AudioUploaderProps {
   onFileUpload: (file: File) => void;
 }
 
-export default function AudioUploader({ onFileUpload }: AudioUploaderProps) {
+export function AudioUploader({ onFileUpload }: AudioUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,19 +35,23 @@ export default function AudioUploader({ onFileUpload }: AudioUploaderProps) {
   return (
     <div className="mb-8">
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+        className="border-2 border-dashed border-purple-200 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="space-y-4">
-          <div className="text-4xl">🎵</div>
+          <div className="text-5xl mb-4">
+            <span className="bg-gradient-to-r from-purple-600 to-emerald-600 bg-clip-text text-transparent">
+              🎵
+            </span>
+          </div>
           <div>
-            <p className="text-lg font-medium text-gray-700">
+            <p className="text-xl font-semibold text-slate-700 mb-2">
               Drop audio files here or click to browse
             </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Supports MP3, WAV, OGG, and other audio formats
+            <p className="text-slate-500">
+              Supports MP3, WAV, OGG, and other professional audio formats
             </p>
           </div>
         </div>

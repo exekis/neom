@@ -1,5 +1,5 @@
 import { useState, RefObject } from "react";
-import { AudioTrack } from "../app/page";
+import { AudioTrack } from "../types/AudioTrack";
 
 interface UseDragHandlerProps {
   track: AudioTrack;
