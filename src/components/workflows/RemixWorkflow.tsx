@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Upload, Send, Shuffle, Music, Headphones } from 'lucide-react';
 import { useAudioGeneration } from '@/hooks/useAudioGeneration';
 import GenerationProgress from '@/components/GenerationProgress';
-import AudioWaveform from '@/components/AudioWaveform';
+import WaveformModal from '@/components/WaveformModal';
 
 interface RemixWorkflowProps {
   onBack: () => void;
@@ -15,8 +15,7 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [showWaveformModal, setShowWaveformModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -43,6 +42,9 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
   const handleSubmit = async () => {
     if (!message.trim()) return;
 
+    // Reset all audio states
+    setAudioBuffer(null);
+    setShowWaveformModal(false);
     reset();
 
     await generateAudio({
@@ -69,10 +71,29 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
 
   // Load audio when generation completes
   React.useEffect(() => {
-    if (audioUrl && !audioBuffer) {
+    if (audioUrl && !isGenerating) {
+      // Reset audio buffer first to ensure we load fresh
+      setAudioBuffer(null);
+
+      // Load the new audio
       loadAudioFromUrl(audioUrl);
     }
-  }, [audioUrl, audioBuffer]);
+  }, [audioUrl, isGenerating]);
+
+  // Show modal when audio is loaded
+  React.useEffect(() => {
+    if (audioBuffer && audioUrl && !isGenerating) {
+      setShowWaveformModal(true);
+    }
+  }, [audioBuffer, audioUrl, isGenerating]);
+
+  const handleOpenInDAW = () => {
+    if (audioUrl && audioBuffer) {
+      sessionStorage.setItem('daw-audio-url', audioUrl);
+      sessionStorage.setItem('daw-audio-name', 'Generated remix track');
+    }
+    window.location.href = '/daw';
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -256,60 +277,6 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
             </motion.div>
           </div>
 
-          {/* Generated Audio Result */}
-          {audioBuffer && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 bg-slate-900/50 backdrop-blur-sm rounded-2xl p-6"
-            >
-              <h2 className="text-xl font-semibold mb-4">Generated Remix</h2>
-
-              <div className="space-y-4">
-                <AudioWaveform
-                  audioBuffer={audioBuffer}
-                  currentTime={currentTime}
-                  onTimeUpdate={setCurrentTime}
-                  isPlaying={isPlaying}
-                  className="bg-slate-800 rounded-lg"
-                />
-
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg font-semibold transition-colors cursor-pointer"
-                    >
-                      {isPlaying ? 'Pause' : 'Play'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentTime(0);
-                        setIsPlaying(false);
-                      }}
-                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-colors cursor-pointer"
-                    >
-                      Stop
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      // Store audio data in sessionStorage for DAW access
-                      if (audioUrl && audioBuffer) {
-                        sessionStorage.setItem('daw-audio-url', audioUrl);
-                        sessionStorage.setItem('daw-audio-name', 'Generated remix track');
-                      }
-                      window.location.href = '/daw';
-                    }}
-                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-lg font-semibold transition-colors cursor-pointer"
-                  >
-                    Open in DAW
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
       </div>
 
@@ -318,6 +285,16 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
         isGenerating={isGenerating}
         progress={progress}
         message={generationMessage}
+      />
+
+      {/* Waveform Modal */}
+      <WaveformModal
+        isOpen={showWaveformModal}
+        onClose={() => setShowWaveformModal(false)}
+        audioUrl={audioUrl}
+        audioBuffer={audioBuffer}
+        trackName="Generated Remix Track"
+        onOpenInDAW={handleOpenInDAW}
       />
     </div>
   );

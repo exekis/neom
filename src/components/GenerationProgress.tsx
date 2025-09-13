@@ -47,6 +47,11 @@ export default function GenerationProgress({
     }
   }, [progress, onComplete]);
 
+  // Auto-dismiss when generation is complete and progress is 100
+  if (!isGenerating && progress >= 100) {
+    return null;
+  }
+
   if (!isGenerating && progress === 0) return null;
 
   return (

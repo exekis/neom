@@ -66,60 +66,49 @@ export function useAudioGeneration() {
         message: 'Processing audio...'
       }));
 
-      // Poll for progress
+      // Simulate progress more smoothly
       let currentProgress = 0;
-      const pollInterval = 500; // Poll every 500ms
-      const progressIncrement = (100 / (estimatedTime / pollInterval)) * 0.8; // 80% of progress from polling
+      const totalSteps = Math.floor(estimatedTime / 100); // Update every 100ms
+      const progressPerStep = 95 / totalSteps; // Go to 95% during processing
 
-      intervalRef.current = setInterval(async () => {
-        try {
-          currentProgress = Math.min(95, currentProgress + progressIncrement);
+      intervalRef.current = setInterval(() => {
+        currentProgress += progressPerStep;
 
-          setState(prev => ({
-            ...prev,
-            progress: currentProgress,
-            message: currentProgress > 80 ? 'Almost done...' : 'Processing audio...'
-          }));
-
-          // Check actual status
-          const statusResponse = await fetch(`/api/generate/audio?jobId=${jobId}`);
-          if (statusResponse.ok) {
-            const status = await statusResponse.json();
-
-            if (status.isComplete) {
-              if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-              }
-
-              setState(prev => ({
-                ...prev,
-                progress: 100,
-                isGenerating: false,
-                audioUrl: status.audioUrl || generateMockAudioUrl(params.type),
-                message: 'Generation complete!'
-              }));
-            }
+        if (currentProgress >= 95) {
+          // Complete the generation
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
           }
-        } catch (error) {
-          console.error('Status check error:', error);
-        }
-      }, pollInterval);
 
-      // Fallback completion after estimated time + buffer
-      setTimeout(() => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
+          // Final completion step
           setState(prev => ({
             ...prev,
             progress: 100,
-            isGenerating: false,
-            audioUrl: generateMockAudioUrl(params.type),
             message: 'Generation complete!'
           }));
+
+          // Auto-dismiss after showing completion
+          setTimeout(() => {
+            setState(prev => ({
+              ...prev,
+              isGenerating: false,
+              audioUrl: generateMockAudioUrl(params.type)
+            }));
+          }, 1000);
+
+        } else {
+          setState(prev => ({
+            ...prev,
+            progress: Math.min(currentProgress, 95),
+            message: currentProgress > 70 ? 'Almost done...' : 'Processing audio...'
+          }));
         }
-      }, estimatedTime + 2000);
+      }, 100);
 
     } catch (error) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
       setState(prev => ({
         ...prev,
         isGenerating: false,

@@ -110,6 +110,9 @@ export default function DAWPage() {
 
           setTracks([newTrack]);
 
+          // Show success message
+          console.log(`Successfully loaded: ${audioName}`);
+
           // Clear sessionStorage after loading
           sessionStorage.removeItem('daw-audio-url');
           sessionStorage.removeItem('daw-audio-name');
