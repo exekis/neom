@@ -1,4 +1,4 @@
-TITLE: NOEM — AI Audio Co-Pilot 
+TITLE: NEOM — AI Audio Co-Pilot 
 
 ASCII SYSTEM DESIGN (FINAL)
 
@@ -19,7 +19,7 @@ ASCII SYSTEM DESIGN (FINAL)
 │  FastAPI (Uvicorn) + FFmpeg + optional Python DSP (spotify/pedalboard)      │
 │                                                                             │
 │  Endpoints:                                                                 │
-│   • POST /upload  -> saves file to /srv/noem/projects/{id}/original.wav     │
+│   • POST /upload  -> saves file to /srv/neom/projects/{id}/original.wav     │
 │   • POST /ops     -> validates DSL, routes to whitelisted ops, runs ffmpeg  │
 │   • GET  /files/* -> StaticFiles for original/modified WAVs                 │
 │                                                                             │
@@ -31,9 +31,9 @@ ASCII SYSTEM DESIGN (FINAL)
 │   add_loop   → stream_loop/trim/fade/gain + adelay + amix                   │
 │                                                                             │
 │  Local FS layout:                                                           │
-│   /srv/noem/projects/<id>/original.wav                                      │
-│   /srv/noem/projects/<id>/modified.wav                                      │
-│   /srv/noem/loops/index.json, /srv/noem/loops/*.wav                         │
+│   /srv/neom/projects/<id>/original.wav                                      │
+│   /srv/neom/projects/<id>/modified.wav                                      │
+│   /srv/neom/loops/index.json, /srv/neom/loops/*.wav                         │
 │                                                                             │
 │  (Optional) SQLite: projects, ops log                                       │
 └───────────────────────────────────────────────────────────────────────────┘
@@ -68,7 +68,7 @@ Validation (server-side):
 • −24 ≤ db ≤ +24
 • targetLufs ∈ [−23, −10]
 • preset ∈ {"plate","room","hall"}  (backend owns mapping)
-• style ∈ known loop tags from /srv/noem/loops/index.json
+• style ∈ known loop tags from /srv/neom/loops/index.json
 • Reject unknown fields; clamp out-of-range values
 
 ROUTER → FFMPEG TEMPLATES (authoritative)
@@ -90,7 +90,7 @@ ROUTER → FFMPEG TEMPLATES (authoritative)
     modified.wav
 
 LOOPS PACK (curated, deterministic)
-• /srv/noem/loops/index.json (tags, bpm, key)
+• /srv/neom/loops/index.json (tags, bpm, key)
   [
     {"id":"punk1","file":"punk_gtr_180bpm_E.wav","tags":["punk","guitar","heavy"],"bpm":180,"key":"E"}
   ]
@@ -98,7 +98,7 @@ LOOPS PACK (curated, deterministic)
 
 LLM PROMPT (paste into system role; return JSON only)
 System:
-You translate user audio intents into a JSON DSL for Noem. Only output a single JSON object per operation or a JSON array of operations. Never output prose, code, or shell. Use these ops: fade, gain, reverb, normalize, add_loop. Use SELECTION_START/SELECTION_END placeholders only if the user references “the selection”.
+You translate user audio intents into a JSON DSL for Neom. Only output a single JSON object per operation or a JSON array of operations. Never output prose, code, or shell. Use these ops: fade, gain, reverb, normalize, add_loop. Use SELECTION_START/SELECTION_END placeholders only if the user references “the selection”.
 
 Few-shot:
 User: fade out the last 20 seconds
@@ -118,7 +118,7 @@ GUARDRAILS (backend responsibilities)
 • Strict JSON schema validation; whitelist ops only.
 • Clamp times/dB; compute DURATION server-side; replace SELECTION_* from UI.
 • No arbitrary shell: render ffmpeg command from templates only.
-• Timeouts per job; idempotent paths: /srv/noem/projects/<id>/.
+• Timeouts per job; idempotent paths: /srv/neom/projects/<id>/.
 • Log ops (SQLite or ops.json) for reproducibility.
 
 TEAM SPLIT (exact)

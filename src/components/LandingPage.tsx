@@ -439,7 +439,7 @@ export function LandingPage() {
             animate={{ opacity: 1 }}
             className="text-4xl font-black mb-4 text-white"
           >
-            NOEM
+            NEOM
           </motion.h1>
 
           <motion.div
@@ -488,7 +488,7 @@ export function LandingPage() {
             transition={{ delay: 0.4, duration: 1 }}
             className="text-7xl md:text-9xl font-black mb-6 leading-none tracking-tight text-white"
           >
-            NOEM
+            NEOM
           </motion.h1>
 
           <motion.div
@@ -636,7 +636,7 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-slate-800 bg-slate-900/50">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-slate-400">© 2025 NOEM. Built for creators, powered by AI.</p>
+          <p className="text-slate-400">© 2025 NEOM. Built for creators, powered by AI.</p>
         </div>
       </footer>
     </div>

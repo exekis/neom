@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NOEM - AI Audio Co-Pilot",
+  title: "NEOM - AI Audio Co-Pilot",
   description: "AI-powered Digital Audio Workstation for seamless audio production",
 };
 

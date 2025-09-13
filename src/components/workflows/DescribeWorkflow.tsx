@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Send, Music, Mic2, FileText } from 'lucide-react';
+import { useAudioGeneration } from '@/hooks/useAudioGeneration';
+import GenerationProgress from '@/components/GenerationProgress';
+import AudioWaveform from '@/components/AudioWaveform';
 
 interface DescribeWorkflowProps {
   onBack: () => void;
@@ -27,7 +30,19 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
   const [customLyrics, setCustomLyrics] = useState('');
   const [isInspiring, setIsInspiring] = useState(false);
   const [currentInspireText, setCurrentInspireText] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const {
+    isGenerating,
+    progress,
+    audioUrl,
+    error,
+    message: generationMessage,
+    generateAudio,
+    reset
+  } = useAudioGeneration();
 
   const handleInspireMe = async () => {
     setIsInspiring(true);
@@ -45,31 +60,35 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
   };
 
   const handleSubmit = async () => {
-    setIsGenerating(true);
+    reset();
 
+    await generateAudio({
+      type: 'describe',
+      prompt: message,
+      parameters: {
+        style: contentType === 'lyrics' ? 'vocal' : 'instrumental'
+      }
+    });
+  };
+
+  const loadAudioFromUrl = async (url: string) => {
     try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: message,
-          contentType,
-          generateLyrics,
-          lyricsPrompt: generateLyrics ? lyricsPrompt : null,
-          customLyrics: !generateLyrics ? customLyrics : null
-        })
-      });
-
-      const result = await response.json();
-      console.log('Generation result:', result);
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioContext = new AudioContext();
+      const buffer = await audioContext.decodeAudioData(arrayBuffer);
+      setAudioBuffer(buffer);
     } catch (error) {
-      console.error('Error generating:', error);
-    } finally {
-      setIsGenerating(false);
+      console.error('Error loading audio:', error);
     }
   };
+
+  // Load audio when generation completes
+  React.useEffect(() => {
+    if (audioUrl && !audioBuffer) {
+      loadAudioFromUrl(audioUrl);
+    }
+  }, [audioUrl, audioBuffer]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -78,7 +97,7 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
         <div className="flex items-center mb-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to workflows
@@ -130,7 +149,7 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
                   disabled={isInspiring}
                   className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600
                            hover:from-purple-700 hover:to-pink-700 py-2 px-4 rounded-lg font-semibold
-                           transition-all duration-300 disabled:opacity-50"
+                           transition-all duration-300 disabled:opacity-50 cursor-pointer"
                 >
                   <Sparkles className={`w-4 h-4 ${isInspiring ? 'animate-spin' : ''}`} />
                   Inspire Me
@@ -175,7 +194,7 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
                   disabled={isGenerating || !message.trim()}
                   className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700
                            py-3 rounded-xl font-semibold transition-colors disabled:opacity-50
-                           disabled:cursor-not-allowed"
+                           disabled:cursor-not-allowed cursor-pointer"
                 >
                   <Send className={`w-4 h-4 ${isGenerating ? 'animate-pulse' : ''}`} />
                   {isGenerating ? 'Generating...' : 'Generate Music'}
@@ -200,7 +219,7 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
                     <button
                       onClick={() => setContentType('instrumental')}
                       className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
-                                 font-semibold transition-colors ${
+                                 font-semibold transition-colors cursor-pointer ${
                         contentType === 'instrumental'
                           ? 'bg-purple-600 text-white'
                           : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
@@ -212,7 +231,7 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
                     <button
                       onClick={() => setContentType('lyrics')}
                       className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
-                                 font-semibold transition-colors ${
+                                 font-semibold transition-colors cursor-pointer ${
                         contentType === 'lyrics'
                           ? 'bg-purple-600 text-white'
                           : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
@@ -275,8 +294,70 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
               </div>
             </motion.div>
           </div>
+
+          {/* Generated Audio Result */}
+          {audioBuffer && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 bg-slate-900/50 backdrop-blur-sm rounded-2xl p-6"
+            >
+              <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
+
+              <div className="space-y-4">
+                <AudioWaveform
+                  audioBuffer={audioBuffer}
+                  currentTime={currentTime}
+                  onTimeUpdate={setCurrentTime}
+                  isPlaying={isPlaying}
+                  className="bg-slate-800 rounded-lg"
+                />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors cursor-pointer"
+                    >
+                      {isPlaying ? 'Pause' : 'Play'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentTime(0);
+                        setIsPlaying(false);
+                      }}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-colors cursor-pointer"
+                    >
+                      Stop
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      // Store audio data in sessionStorage for DAW access
+                      if (audioUrl && audioBuffer) {
+                        sessionStorage.setItem('daw-audio-url', audioUrl);
+                        sessionStorage.setItem('daw-audio-name', `Generated ${contentType} track`);
+                      }
+                      window.location.href = '/daw';
+                    }}
+                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-lg font-semibold transition-colors cursor-pointer"
+                  >
+                    Open in DAW
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
+
+      {/* Generation Progress Overlay */}
+      <GenerationProgress
+        isGenerating={isGenerating}
+        progress={progress}
+        message={generationMessage}
+      />
     </div>
   );
 }

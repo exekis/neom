@@ -22,15 +22,15 @@ export function AudioControls({
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-100 p-6 mb-6">
+    <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/30 p-6 mb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
             onClick={isPlaying ? onPause : onPlay}
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-200 shadow-lg ${
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-200 shadow-lg cursor-pointer ${
               isPlaying
-                ? 'bg-gradient-to-r from-red-500 to-red-600 hover:shadow-red-200'
-                : 'bg-gradient-to-r from-purple-600 to-emerald-600 hover:shadow-purple-200'
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-purple-600 hover:bg-purple-700'
             }`}
           >
             {isPlaying ? '⏸️' : '▶️'}
@@ -38,13 +38,13 @@ export function AudioControls({
 
           <button
             onClick={onStop}
-            className="w-12 h-12 rounded-full bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 flex items-center justify-center text-white transition-all duration-200 shadow-lg"
+            className="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white transition-all duration-200 shadow-lg cursor-pointer"
           >
             ⏹️
           </button>
         </div>
 
-        <div className="text-lg text-slate-600 font-mono font-semibold bg-slate-100 px-4 py-2 rounded-lg">
+        <div className="text-lg text-slate-200 font-mono font-semibold bg-slate-800 px-4 py-2 rounded-lg">
           {formatTime(currentTime)}
         </div>
       </div>

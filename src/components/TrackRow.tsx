@@ -41,13 +41,13 @@ export function TrackRow({
   const trackNumber = index + 1;
 
   return (
-    <div className="flex items-center hover:bg-purple-50/50 transition-colors duration-200">
-      <div className="w-40 p-6 bg-gradient-to-r from-slate-50 to-purple-50 border-r border-purple-100 flex items-center justify-between">
+    <div className="flex items-center hover:bg-slate-800/30 transition-colors duration-200">
+      <div className="w-40 p-6 bg-slate-800/30 border-r border-slate-700/30 flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-slate-700 mb-1">
+          <span className="text-sm font-semibold text-white mb-1">
             Track {trackNumber}
           </span>
-          <span className="text-xs text-slate-500 truncate max-w-24" title={track.name}>
+          <span className="text-xs text-slate-400 truncate max-w-24" title={track.name}>
             {track.name}
           </span>
         </div>
@@ -56,7 +56,7 @@ export function TrackRow({
             e.stopPropagation();
             onRemoveTrack(track.id);
           }}
-          className="text-red-400 hover:text-red-600 hover:bg-red-50 w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all duration-200"
+          className="text-red-400 hover:text-red-300 hover:bg-red-900/30 w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all duration-200"
           title="Remove track"
         >
           ✕
@@ -88,7 +88,7 @@ export function TrackRow({
 
           {track.startTime > 0 && (
             <div
-              className="absolute text-xs text-gray-500 bg-white px-1 rounded"
+              className="absolute text-xs text-slate-400 bg-slate-800 px-1 rounded"
               style={{
                 left: `${track.startTime * PIXELS_PER_SECOND}px`,
                 top: '-20px'
