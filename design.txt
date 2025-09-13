@@ -1,0 +1,147 @@
+TITLE: NOEM — AI Audio Co-Pilot 
+
+ASCII SYSTEM DESIGN (FINAL)
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│  Browser (React/Vite)                                                     │
+│  ┌────────────┐   multipart   ┌────────────┐   JSON DSL   ┌────────────┐ │
+│  │ Upload UI  │ ─────────────▶│  /upload   │─────────────▶│  /ops      │ │
+│  └────┬───────┘               └────┬───────┘             └────┬───────┘ │
+│       │  Original player URL         │  Modified player URL        │     │
+│       ▼                              ▼                             ▼     │
+│  <audio src=/files/<id>/original.wav>   <audio src=/files/<id>/modified.wav> │
+│  Timeline (bar grid + region select)  |  Chat Sidebar (LLM prompt)         │
+└───────┼─────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│  Backend — Single Compute Box (Ubuntu or WSL)                               │
+│  FastAPI (Uvicorn) + FFmpeg + optional Python DSP (spotify/pedalboard)      │
+│                                                                             │
+│  Endpoints:                                                                 │
+│   • POST /upload  -> saves file to /srv/noem/projects/{id}/original.wav     │
+│   • POST /ops     -> validates DSL, routes to whitelisted ops, runs ffmpeg  │
+│   • GET  /files/* -> StaticFiles for original/modified WAVs                 │
+│                                                                             │
+│  Router (whitelist) → Executors (FFmpeg/DSP):                               │
+│   fade       → afade                                                        │
+│   gain       → volume                                                       │
+│   reverb     → aecho (demo) or afir (with 1 IR)                             │
+│   normalize  → loudnorm                                                     │
+│   add_loop   → stream_loop/trim/fade/gain + adelay + amix                   │
+│                                                                             │
+│  Local FS layout:                                                           │
+│   /srv/noem/projects/<id>/original.wav                                      │
+│   /srv/noem/projects/<id>/modified.wav                                      │
+│   /srv/noem/loops/index.json, /srv/noem/loops/*.wav                         │
+│                                                                             │
+│  (Optional) SQLite: projects, ops log                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+
+EXTERNAL SERVICES (clearly named; OPTIONAL for MVP)
+• LLM: Azure OpenAI (Chat Completions) — for NL → DSL only.
+• Speech-to-Text: Azure Speech Service — if voice commands are needed.
+• DAW integration (post-hackathon stretch): LMMS SDK (C++ plugin), or Ardour Lua API, or REAPER ReaScript.
+• Azure scale-out (post-hackathon stretch): Azure Functions + Azure Storage (Blob/Queues) + Azure Cosmos DB.
+
+CONTRACTS (DO NOT DEVIATE)
+Endpoints (only these):
+  1) POST /upload  (multipart/form-data: file=<wav/mp3>)
+     -> { "projectId": "<id>", "originalUrl": "/files/<id>/original.wav" }
+  2) POST /ops
+     Body: { "projectId": "<id>", "ops": [ DSL_OP, ... ] }
+     -> { "modifiedUrl": "/files/<id>/modified.wav", "latencyMs": <int> }
+  3) GET /files/<projectId>/(original|modified).wav
+
+DSL SCHEMA (the ONLY thing the LLM should output)
+Op ∈ { "fade", "gain", "reverb", "normalize", "add_loop" }
+
+Examples:
+{"op":"fade","startSec":60,"endSec":80,"shape":"linear"}
+{"op":"gain","db":-3}
+{"op":"reverb","preset":"plate"}
+{"op":"normalize","targetLufs":-14}
+{"op":"add_loop","style":"punk_heavy_guitar","region":{"startSec":12.0,"endSec":17.0},"gainDb":-6}
+
+Validation (server-side):
+• 0 ≤ startSec < endSec ≤ duration
+• −24 ≤ db ≤ +24
+• targetLufs ∈ [−23, −10]
+• preset ∈ {"plate","room","hall"}  (backend owns mapping)
+• style ∈ known loop tags from /srv/noem/loops/index.json
+• Reject unknown fields; clamp out-of-range values
+
+ROUTER → FFMPEG TEMPLATES (authoritative)
+• Fade out:   afade
+  ffmpeg -y -i IN -af "afade=t=out:st={start}:d={dur}" OUT
+• Gain:       volume
+  ffmpeg -y -i IN -af "volume={db}dB" OUT
+• Reverb:     aecho (demo)  OR  afir with one shipped IR
+  ffmpeg -y -i IN -af "aecho=0.8:0.9:60:0.5,aecho=0.6:0.8:120:0.4" OUT
+• Normalize:  loudnorm
+  ffmpeg -y -i IN -af "loudnorm=I={LUFS}:LRA=11:TP=-1.5" OUT
+• Add loop:   repeat/trim/fade/gain + offset + mix
+  # Build loop segment of duration D=(endSec-startSec):
+  ffmpeg -y -stream_loop -1 -i LOOP.wav -t D \
+    -af "afade=t=in:st=0:d=0.05,afade=t=out:st={D-0.1}:d=0.1,volume={gainDb}dB" /tmp/seg.wav
+  # Offset and mix with original at startSec:
+  ffmpeg -y -i original.wav -i /tmp/seg.wav \
+    -filter_complex "[1:a]adelay={ms}|{ms},apad[L];[0:a][L]amix=inputs=2:duration=first:dropout_transition=2" \
+    modified.wav
+
+LOOPS PACK (curated, deterministic)
+• /srv/noem/loops/index.json (tags, bpm, key)
+  [
+    {"id":"punk1","file":"punk_gtr_180bpm_E.wav","tags":["punk","guitar","heavy"],"bpm":180,"key":"E"}
+  ]
+• Selection logic: match by style tag; optional atempo within [0.75,1.25]; prefer power-chord/percussive loops to avoid key clashes.
+
+LLM PROMPT (paste into system role; return JSON only)
+System:
+You translate user audio intents into a JSON DSL for Noem. Only output a single JSON object per operation or a JSON array of operations. Never output prose, code, or shell. Use these ops: fade, gain, reverb, normalize, add_loop. Use SELECTION_START/SELECTION_END placeholders only if the user references “the selection”.
+
+Few-shot:
+User: fade out the last 20 seconds
+Assistant:
+{"op":"fade","startSec":DURATION-20,"endSec":DURATION,"shape":"linear"}
+User: lower volume by 3 dB
+Assistant:
+{"op":"gain","db":-3}
+User: add some heavy punk riffs under the selection
+Assistant:
+{"op":"add_loop","style":"punk_heavy_guitar","region":{"startSec":SELECTION_START,"endSec":SELECTION_END},"gainDb":-6}
+User: prepare for Spotify loudness
+Assistant:
+{"op":"normalize","targetLufs":-14}
+
+GUARDRAILS (backend responsibilities)
+• Strict JSON schema validation; whitelist ops only.
+• Clamp times/dB; compute DURATION server-side; replace SELECTION_* from UI.
+• No arbitrary shell: render ffmpeg command from templates only.
+• Timeouts per job; idempotent paths: /srv/noem/projects/<id>/.
+• Log ops (SQLite or ops.json) for reproducibility.
+
+TEAM SPLIT (exact)
+• FE (React/Vite): upload, two <audio> players, timeline region select, chat box.
+• BE (FastAPI): /upload, /ops, StaticFiles, router, ffmpeg calls, validation.
+• LLM: prompt + client; enforce JSON-only; post-process DURATION/SELECTION.
+• Loops/DSP: curate loops/, write index.json, test add_loop pipeline.
+• PM/Integrator: demo script, sample audio, dry runs.
+
+TIMELINE (Toronto)
+• T+0–2h: FastAPI + /upload → original.wav; FE player for original.
+• T+2–5h: /ops with fade + gain; FE A/B players.
+• T+5–7h: reverb + normalize; timeline overlay.
+• T+7–9h: add_loop op (1–2 punk guitar loops); selection→region; mix.
+• T+9–11h: LLM → DSL integration; JSON validation; error states.
+• T+11–end: polish, record 60s demo, rehearse.
+
+STRETCH HOOKS (documented, DO NOT BUILD NOW)
+• Azure Speech Service for STT commands.
+• Azure OpenAI for NL→DSL (swap in place of local LLM).
+• Azure Functions + Azure Storage + Azure Cosmos DB for scale.
+• LMMS SDK, Ardour Lua, or REAPER ReaScript for true DAW automation later.
+
+SINGLE SOURCE OF TRUTH
+• Endpoints, DSL, router templates, and file layout above are canonical.
+• Do not add endpoints or ops without group sign-off.
