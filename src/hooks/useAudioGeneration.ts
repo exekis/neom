@@ -57,8 +57,8 @@ export function useAudioGeneration() {
         throw new Error('Failed to start generation');
       }
 
-      const result = await response.json();
-      const { jobId, estimatedTime } = result;
+  const result = await response.json();
+  const { jobId, estimatedTime } = result;
 
       setState(prev => ({
         ...prev,
@@ -66,44 +66,48 @@ export function useAudioGeneration() {
         message: 'Processing audio...'
       }));
 
-      // Simulate progress more smoothly
+      // simulate progress smoothly and finish faster in dev
+      const isProd = process.env.NODE_ENV === 'production';
       let currentProgress = 0;
-      const totalSteps = Math.floor(estimatedTime / 100); // Update every 100ms
-      const progressPerStep = 95 / totalSteps; // Go to 95% during processing
+      const tickMs = isProd ? 100 : 50; // faster visual updates in dev
+      const targetDuringProcess = 95;
+      const totalSteps = Math.max(1, Math.floor(estimatedTime / tickMs)); // avoid divide by zero
+      const progressPerStep = targetDuringProcess / totalSteps;
 
       intervalRef.current = setInterval(() => {
         currentProgress += progressPerStep;
 
-        if (currentProgress >= 95) {
-          // Complete the generation
+        if (currentProgress >= targetDuringProcess) {
+          // complete the generation
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
           }
 
-          // Final completion step
+          // final completion step
           setState(prev => ({
             ...prev,
             progress: 100,
             message: 'Generation complete!'
           }));
 
-          // Auto-dismiss after showing completion
+          // auto-dismiss quickly in dev, keep a brief pause in prod
+          const doneDelay = isProd ? 1000 : 150;
           setTimeout(() => {
             setState(prev => ({
               ...prev,
               isGenerating: false,
-              audioUrl: generateMockAudioUrl(params.type)
+              audioUrl: generateMockAudioUrl()
             }));
-          }, 1000);
+          }, doneDelay);
 
         } else {
           setState(prev => ({
             ...prev,
-            progress: Math.min(currentProgress, 95),
+            progress: Math.min(currentProgress, targetDuringProcess),
             message: currentProgress > 70 ? 'Almost done...' : 'Processing audio...'
           }));
         }
-      }, 100);
+      }, tickMs);
 
     } catch (error) {
       if (intervalRef.current) {
@@ -140,7 +144,7 @@ export function useAudioGeneration() {
 }
 
 // Generate mock audio URL for demo purposes
-function generateMockAudioUrl(type: string): string {
+function generateMockAudioUrl(): string {
   // For now, use the same intro jazz audio as placeholder for all types
   // This will be the loop that gets generated and visualized
   return '/audio/intro_jazz.mp3';

@@ -17,23 +17,24 @@ export async function POST(request: NextRequest) {
     const body: AudioGenerationRequest = await request.json();
     const { type, prompt, audioUrl, parameters } = body;
 
-    // Simulate processing time based on type
+    // simulate processing time based on type
+    const isProd = process.env.NODE_ENV === 'production'; // dev should be fast
     const processingTimes = {
-      describe: 3000,
-      layers: 8000,
-      remix: 12000,
-      vocals: 15000
-    };
+      describe: isProd ? 3000 : 200,
+      layers: isProd ? 8000 : 300,
+      remix: isProd ? 12000 : 400,
+      vocals: isProd ? 15000 : 500
+    } as const;
 
-    const processingTime = processingTimes[type] || 5000;
+    const processingTime = processingTimes[type] || (isProd ? 5000 : 250);
 
     // Generate a unique job ID
     const jobId = Date.now().toString(36) + Math.random().toString(36).substr(2);
 
-    // Start the generation process (simulate with timeout)
+    // start the generation process (simulate with timeout)
     setTimeout(async () => {
-      // This would normally trigger the actual audio generation
-      // For now, we'll just log the completion
+      // this would normally trigger the actual audio generation
+      // for now, we'll just log the completion
       console.log(`Audio generation completed for job ${jobId}`);
     }, processingTime);
 
