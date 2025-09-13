@@ -35,22 +35,22 @@ export function AudioUploader({ onFileUpload }: AudioUploaderProps) {
   return (
     <div className="mb-8">
       <div
-        className="border-2 border-dashed border-purple-200 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
+        className="border-2 border-dashed border-slate-700/50 rounded-xl p-8 text-center hover:border-slate-600 hover:bg-slate-800/30 transition-all duration-300 cursor-pointer bg-slate-900/50 backdrop-blur-sm"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="space-y-4">
           <div className="text-5xl mb-4">
-            <span className="bg-gradient-to-r from-purple-600 to-emerald-600 bg-clip-text text-transparent">
+            <span className="text-white">
               🎵
             </span>
           </div>
           <div>
-            <p className="text-xl font-semibold text-slate-700 mb-2">
+            <p className="text-xl font-semibold text-white mb-2">
               Drop audio files here or click to browse
             </p>
-            <p className="text-slate-500">
+            <p className="text-slate-400">
               Supports MP3, WAV, OGG, and other professional audio formats
             </p>
           </div>

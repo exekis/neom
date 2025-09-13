@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Upload, Send, Shuffle, Music, Headphones } from 'lucide-react';
+import { useAudioGeneration } from '@/hooks/useAudioGeneration';
+import GenerationProgress from '@/components/GenerationProgress';
+import WaveformModal from '@/components/WaveformModal';
 
 interface RemixWorkflowProps {
   onBack: () => void;
@@ -11,8 +14,19 @@ interface RemixWorkflowProps {
 export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [showWaveformModal, setShowWaveformModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isGenerating,
+    progress,
+    audioUrl,
+    error,
+    message: generationMessage,
+    generateAudio,
+    reset
+  } = useAudioGeneration();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -26,27 +40,59 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
   };
 
   const handleSubmit = async () => {
-    if (!uploadedFile || !message.trim()) return;
+    if (!message.trim()) return;
 
-    setIsProcessing(true);
+    // Reset all audio states
+    setAudioBuffer(null);
+    setShowWaveformModal(false);
+    reset();
 
+    await generateAudio({
+      type: 'remix',
+      prompt: message,
+      audioUrl: uploadedFile ? URL.createObjectURL(uploadedFile) : undefined,
+      parameters: {
+        style: 'remix'
+      }
+    });
+  };
+
+  const loadAudioFromUrl = async (url: string) => {
     try {
-      const formData = new FormData();
-      formData.append('file', uploadedFile);
-      formData.append('prompt', message);
-
-      const response = await fetch('/api/remix', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-      console.log('Remix result:', result);
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioContext = new AudioContext();
+      const buffer = await audioContext.decodeAudioData(arrayBuffer);
+      setAudioBuffer(buffer);
     } catch (error) {
-      console.error('Error processing remix:', error);
-    } finally {
-      setIsProcessing(false);
+      console.error('Error loading audio:', error);
     }
+  };
+
+  // Load audio when generation completes
+  React.useEffect(() => {
+    if (audioUrl && !isGenerating) {
+      // Reset audio buffer first to ensure we load fresh
+      setAudioBuffer(null);
+
+      // Load the new audio
+      loadAudioFromUrl(audioUrl);
+    }
+  }, [audioUrl, isGenerating]);
+
+  // Show modal when audio is loaded
+  React.useEffect(() => {
+    if (audioBuffer && audioUrl && !isGenerating) {
+      setShowWaveformModal(true);
+    }
+  }, [audioBuffer, audioUrl, isGenerating]);
+
+  const handleOpenInDAW = () => {
+    if (audioUrl && audioBuffer) {
+      sessionStorage.setItem('daw-audio-url', audioUrl);
+      sessionStorage.setItem('daw-audio-name', 'Generated remix track');
+    }
+    window.location.href = '/daw';
   };
 
   return (
@@ -56,7 +102,7 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
         <div className="flex items-center mb-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to workflows
@@ -192,25 +238,25 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
                   <div className="grid grid-cols-1 gap-2 text-sm text-slate-300">
                     <button
                       onClick={() => setMessage("Transform into a high-energy dance remix with heavy bass and electronic drops")}
-                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors"
+                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       • Dance/EDM remix with drops
                     </button>
                     <button
                       onClick={() => setMessage("Create a chill lo-fi version with vinyl texture and slower tempo")}
-                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors"
+                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       • Lo-fi chill version
                     </button>
                     <button
                       onClick={() => setMessage("Make an acoustic version focusing on organic instruments")}
-                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors"
+                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       • Acoustic arrangement
                     </button>
                     <button
                       onClick={() => setMessage("Create a trap remix with 808 drums and modern hip-hop elements")}
-                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors"
+                      className="text-left p-2 rounded hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       • Trap/Hip-hop style
                     </button>
@@ -219,19 +265,37 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={isProcessing || !uploadedFile || !message.trim()}
+                  disabled={isGenerating || !message.trim()}
                   className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700
-                           py-3 rounded-xl font-semibold transition-colors disabled:opacity-50
+                           py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 cursor-pointer
                            disabled:cursor-not-allowed"
                 >
-                  <Send className={`w-4 h-4 ${isProcessing ? 'animate-pulse' : ''}`} />
-                  {isProcessing ? 'Processing Remix...' : 'Start Remix'}
+                  <Send className={`w-4 h-4 ${isGenerating ? 'animate-pulse' : ''}`} />
+                  {isGenerating ? 'Processing Remix...' : 'Start Remix'}
                 </button>
               </div>
             </motion.div>
           </div>
+
         </div>
       </div>
+
+      {/* Generation Progress Overlay */}
+      <GenerationProgress
+        isGenerating={isGenerating}
+        progress={progress}
+        message={generationMessage}
+      />
+
+      {/* Waveform Modal */}
+      <WaveformModal
+        isOpen={showWaveformModal}
+        onClose={() => setShowWaveformModal(false)}
+        audioUrl={audioUrl}
+        audioBuffer={audioBuffer}
+        trackName="Generated Remix Track"
+        onOpenInDAW={handleOpenInDAW}
+      />
     </div>
   );
 }

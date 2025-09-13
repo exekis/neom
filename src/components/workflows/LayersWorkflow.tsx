@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Upload, Send, Music } from 'lucide-react';
+import { useAudioGeneration } from '@/hooks/useAudioGeneration';
+import GenerationProgress from '@/components/GenerationProgress';
+import WaveformModal from '@/components/WaveformModal';
 
 interface LayersWorkflowProps {
   onBack: () => void;
@@ -19,7 +22,19 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
   const [bpm, setBpm] = useState('120');
   const [selectedBars, setSelectedBars] = useState(16);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [showWaveformModal, setShowWaveformModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isGenerating,
+    progress,
+    audioUrl,
+    error,
+    message: generationMessage,
+    generateAudio,
+    reset
+  } = useAudioGeneration();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -32,15 +47,60 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting layers workflow:', {
-      message,
-      selectedKey,
-      selectedMode,
-      bpm,
-      selectedBars,
-      uploadedFile
+  const handleSubmit = async () => {
+    // Reset all audio states
+    setAudioBuffer(null);
+    setShowWaveformModal(false);
+    reset();
+
+    await generateAudio({
+      type: 'layers',
+      prompt: message,
+      parameters: {
+        key: selectedKey,
+        style: selectedMode.toLowerCase(),
+        tempo: parseInt(bpm),
+        duration: selectedBars * (60 / parseInt(bpm)) * 4 // Calculate duration based on bars and BPM
+      }
     });
+  };
+
+  const loadAudioFromUrl = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioContext = new AudioContext();
+      const buffer = await audioContext.decodeAudioData(arrayBuffer);
+      setAudioBuffer(buffer);
+    } catch (error) {
+      console.error('Error loading audio:', error);
+    }
+  };
+
+  // Load audio when generation completes
+  React.useEffect(() => {
+    if (audioUrl && !isGenerating) {
+      // Reset audio buffer first to ensure we load fresh
+      setAudioBuffer(null);
+
+      // Load the new audio
+      loadAudioFromUrl(audioUrl);
+    }
+  }, [audioUrl, isGenerating]);
+
+  // Show modal when audio is loaded
+  React.useEffect(() => {
+    if (audioBuffer && audioUrl && !isGenerating) {
+      setShowWaveformModal(true);
+    }
+  }, [audioBuffer, audioUrl, isGenerating]);
+
+  const handleOpenInDAW = () => {
+    if (audioUrl && audioBuffer) {
+      sessionStorage.setItem('daw-audio-url', audioUrl);
+      sessionStorage.setItem('daw-audio-name', `Generated ${selectedKey} ${selectedMode.toLowerCase()} loop`);
+    }
+    window.location.href = '/daw';
   };
 
   return (
@@ -50,7 +110,7 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
         <div className="flex items-center mb-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to workflows
@@ -109,11 +169,13 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
 
                 <button
                   onClick={handleSubmit}
+                  disabled={isGenerating || !message.trim()}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
-                           py-3 rounded-xl font-semibold transition-colors"
+                           py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 cursor-pointer
+                           disabled:cursor-not-allowed"
                 >
-                  <Send className="w-4 h-4" />
-                  Generate Loop
+                  <Send className={`w-4 h-4 ${isGenerating ? 'animate-pulse' : ''}`} />
+                  {isGenerating ? 'Generating...' : 'Generate Loop'}
                 </button>
               </div>
             </motion.div>
@@ -142,7 +204,7 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
                     onClick={handleUploadClick}
                     className="w-full flex items-center justify-center gap-2 bg-slate-800 border-2
                              border-dashed border-slate-600 hover:border-slate-500 py-4 rounded-xl
-                             transition-colors"
+                             transition-colors cursor-pointer"
                   >
                     <Upload className="w-5 h-5" />
                     {uploadedFile ? uploadedFile.name : 'Click to upload audio'}
@@ -201,7 +263,7 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
                       <button
                         key={bars}
                         onClick={() => setSelectedBars(bars)}
-                        className={`flex-1 py-3 rounded-xl font-semibold transition-colors ${
+                        className={`flex-1 py-3 rounded-xl font-semibold transition-colors cursor-pointer ${
                           selectedBars === bars
                             ? 'bg-blue-600 text-white'
                             : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
@@ -215,8 +277,26 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
               </div>
             </motion.div>
           </div>
+
         </div>
       </div>
+
+      {/* Generation Progress Overlay */}
+      <GenerationProgress
+        isGenerating={isGenerating}
+        progress={progress}
+        message={generationMessage}
+      />
+
+      {/* Waveform Modal */}
+      <WaveformModal
+        isOpen={showWaveformModal}
+        onClose={() => setShowWaveformModal(false)}
+        audioUrl={audioUrl}
+        audioBuffer={audioBuffer}
+        trackName={`Generated ${selectedKey} ${selectedMode} Loop`}
+        onOpenInDAW={handleOpenInDAW}
+      />
     </div>
   );
 }

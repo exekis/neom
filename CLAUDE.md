@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NOEM is an AI Audio Co-Pilot - a web-based Digital Audio Workstation (DAW) built for Hack the North 2025. This is a hackathon "one-box" system with clearly marked stretch hooks for Azure integration.
+NEOM is an AI Audio Co-Pilot - a web-based Digital Audio Workstation (DAW) built for Hack the North 2025. This is a hackathon "one-box" system with clearly marked stretch hooks for Azure integration.
 
 ## System Architecture
 

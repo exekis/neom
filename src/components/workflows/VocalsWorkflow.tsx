@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mic, Upload, Send, Square, Play, Pause } from 'lucide-react';
+import { useAudioGeneration } from '@/hooks/useAudioGeneration';
+import GenerationProgress from '@/components/GenerationProgress';
+import WaveformModal from '@/components/WaveformModal';
 
 interface VocalsWorkflowProps {
   onBack: () => void;
@@ -15,11 +18,23 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [showWaveformModal, setShowWaveformModal] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+    isGenerating,
+    progress,
+    audioUrl,
+    error,
+    message: generationMessage,
+    generateAudio,
+    reset
+  } = useAudioGeneration();
 
   const startRecording = useCallback(async () => {
     try {
@@ -89,12 +104,57 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting vocals workflow:', {
-      message,
-      recordedAudio,
-      uploadedFile
+  const handleSubmit = async () => {
+    // Reset all audio states
+    setAudioBuffer(null);
+    setShowWaveformModal(false);
+    reset();
+
+    await generateAudio({
+      type: 'vocals',
+      prompt: message,
+      parameters: {
+        style: 'vocal'
+      }
     });
+  };
+
+  const loadAudioFromUrl = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioContext = new AudioContext();
+      const buffer = await audioContext.decodeAudioData(arrayBuffer);
+      setAudioBuffer(buffer);
+    } catch (error) {
+      console.error('Error loading audio:', error);
+    }
+  };
+
+  // Load audio when generation completes
+  React.useEffect(() => {
+    if (audioUrl && !isGenerating) {
+      // Reset audio buffer first to ensure we load fresh
+      setAudioBuffer(null);
+
+      // Load the new audio
+      loadAudioFromUrl(audioUrl);
+    }
+  }, [audioUrl, isGenerating]);
+
+  // Show modal when audio is loaded
+  React.useEffect(() => {
+    if (audioBuffer && audioUrl && !isGenerating) {
+      setShowWaveformModal(true);
+    }
+  }, [audioBuffer, audioUrl, isGenerating]);
+
+  const handleOpenInDAW = () => {
+    if (audioUrl && audioBuffer) {
+      sessionStorage.setItem('daw-audio-url', audioUrl);
+      sessionStorage.setItem('daw-audio-name', 'Generated vocal track');
+    }
+    window.location.href = '/daw';
   };
 
   const formatTime = (seconds: number) => {
@@ -110,7 +170,7 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
         <div className="flex items-center mb-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to workflows
@@ -169,11 +229,13 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
 
                 <button
                   onClick={handleSubmit}
+                  disabled={isGenerating || !message.trim()}
                   className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700
-                           py-3 rounded-xl font-semibold transition-colors"
+                           py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 cursor-pointer
+                           disabled:cursor-not-allowed"
                 >
-                  <Send className="w-4 h-4" />
-                  Process Vocals
+                  <Send className={`w-4 h-4 ${isGenerating ? 'animate-pulse' : ''}`} />
+                  {isGenerating ? 'Processing...' : 'Process Vocals'}
                 </button>
               </div>
             </motion.div>
@@ -200,7 +262,7 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
                     <button
                       onClick={isRecording ? stopRecording : startRecording}
                       className={`w-20 h-20 rounded-full flex items-center justify-center text-white
-                                 transition-all duration-200 ${
+                                 transition-all duration-200 cursor-pointer ${
                         isRecording
                           ? 'bg-red-600 hover:bg-red-700 animate-pulse'
                           : 'bg-green-600 hover:bg-green-700'
@@ -226,7 +288,7 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
                     <button
                       onClick={playRecording}
                       className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
-                               py-2 px-4 rounded-lg font-semibold transition-colors mx-auto"
+                               py-2 px-4 rounded-lg font-semibold transition-colors mx-auto cursor-pointer"
                     >
                       {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       {isPlaying ? 'Pause' : 'Play'}
@@ -248,7 +310,7 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
                     onClick={handleUploadClick}
                     className="w-full flex items-center justify-center gap-2 bg-slate-800 border-2
                              border-dashed border-slate-600 hover:border-slate-500 py-4 rounded-xl
-                             transition-colors"
+                             transition-colors cursor-pointer"
                   >
                     <Upload className="w-5 h-5" />
                     {uploadedFile ? uploadedFile.name : 'Upload vocal file'}
@@ -257,8 +319,26 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
               </div>
             </motion.div>
           </div>
+
         </div>
       </div>
+
+      {/* Generation Progress Overlay */}
+      <GenerationProgress
+        isGenerating={isGenerating}
+        progress={progress}
+        message={generationMessage}
+      />
+
+      {/* Waveform Modal */}
+      <WaveformModal
+        isOpen={showWaveformModal}
+        onClose={() => setShowWaveformModal(false)}
+        audioUrl={audioUrl}
+        audioBuffer={audioBuffer}
+        trackName="Generated Vocal Track"
+        onOpenInDAW={handleOpenInDAW}
+      />
     </div>
   );
 }

@@ -29,9 +29,101 @@ export default function DAWPage() {
     audioContext: audioContextRef.current
   });
 
+  // Keyboard hotkeys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle hotkeys if not typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key) {
+        case ' ': // Space bar - play/pause
+          e.preventDefault();
+          if (tracks.length > 0) {
+            if (isPlaying) {
+              pause();
+            } else {
+              play(tracks);
+            }
+          }
+          break;
+        case 'Enter': // Enter - play/pause (alternative)
+          e.preventDefault();
+          if (tracks.length > 0) {
+            if (isPlaying) {
+              pause();
+            } else {
+              play(tracks);
+            }
+          }
+          break;
+        case 'Escape': // Escape - stop
+          e.preventDefault();
+          stop();
+          break;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // Stop audio when tab/window is not visible
+      if (document.hidden && isPlaying) {
+        pause();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [tracks, isPlaying, play, pause, stop]);
+
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       window.location.href = '/';
+      return;
+    }
+
+    // Load audio from sessionStorage if coming from workflow
+    const loadSessionAudio = async () => {
+      const audioUrl = sessionStorage.getItem('daw-audio-url');
+      const audioName = sessionStorage.getItem('daw-audio-name');
+
+      if (audioUrl && audioName) {
+        try {
+          const audioContext = initAudioContext();
+          const response = await fetch(audioUrl);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+          const newTrack: AudioTrack = {
+            id: Date.now().toString(),
+            name: audioName,
+            audioBuffer,
+            color: TRACK_COLORS[0],
+            startTime: 0,
+            duration: audioBuffer.duration,
+          };
+
+          setTracks([newTrack]);
+
+          // Show success message
+          console.log(`Successfully loaded: ${audioName}`);
+
+          // Clear sessionStorage after loading
+          sessionStorage.removeItem('daw-audio-url');
+          sessionStorage.removeItem('daw-audio-name');
+        } catch (error) {
+          console.error('Error loading audio from workflow:', error);
+        }
+      }
+    };
+
+    if (isLoaded && isSignedIn) {
+      loadSessionAudio();
     }
   }, [isSignedIn, isLoaded]);
 
@@ -95,25 +187,25 @@ export default function DAWPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50 flex">
+    <div className="min-h-screen bg-slate-950 flex">
       <div className="flex-1 flex flex-col">
-        <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 px-6 py-4">
+        <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700/50 px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-emerald-600 bg-clip-text text-transparent">
-              NOEM Studio
+            <h1 className="text-2xl font-bold text-white">
+              NEOM Studio
             </h1>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-slate-400">
                 Welcome, {user?.firstName || 'User'}
               </span>
               <button
                 onClick={() => setIsChatOpen(!isChatOpen)}
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-emerald-600 text-white rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer"
               >
                 {isChatOpen ? 'Hide AI' : 'Open AI Assistant'}
               </button>
               <SignOutButton>
-                <button className="p-2 text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
+                <button className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
                   <LogOut className="w-5 h-5" />
                 </button>
               </SignOutButton>
@@ -148,7 +240,15 @@ export default function DAWPage() {
         </main>
       </div>
 
-      <ChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <ChatSidebar
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        tracks={tracks}
+        onApplyEffect={(effect) => {
+          // Handle audio effect application
+          console.log('Applying effect:', effect);
+        }}
+      />
     </div>
   );
 }

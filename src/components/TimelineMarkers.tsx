@@ -10,14 +10,14 @@ export function TimelineMarkers({
   markerCount = 21
 }: TimelineMarkersProps) {
   return (
-    <div className="absolute top-0 left-0 right-0 h-6 border-b border-gray-200">
+    <div className="absolute top-0 left-0 right-0 h-6 border-b border-slate-700/30">
       {Array.from({ length: markerCount }).map((_, i) => (
         <div
           key={i}
-          className="absolute top-0 h-full border-l border-gray-300"
+          className="absolute top-0 h-full border-l border-slate-600/50"
           style={{ left: `${i * pixelsPerSecond}px` }}
         >
-          <span className="text-xs text-gray-500 ml-1">{i}s</span>
+          <span className="text-xs text-slate-400 ml-1">{i}s</span>
         </div>
       ))}
     </div>
