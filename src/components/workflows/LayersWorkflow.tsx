@@ -72,7 +72,7 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
 
       // Optionally prefetch manifest to show later
       if (data?.manifestUrl) {
-        const manifestRes = await fetch(`http://20.161.72.50${data.manifestUrl}`);
+        const manifestRes = await fetch(`${process.env.BACKEND_API_URL}${data.manifestUrl}`);
         if (manifestRes.ok) {
           await manifestRes.json();
           // In the future we can surface this in a provenance panel
@@ -81,7 +81,7 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
 
       // Optionally warm up history endpoint
       try {
-        await fetch(`http://20.161.72.50/api/projects/${projectId}/ops?limit=10`);
+        await fetch(`${process.env.BACKEND_API_URL}/api/projects/${projectId}/ops?limit=10`);
       } catch {}
     } catch (e) {
       console.error(e);
