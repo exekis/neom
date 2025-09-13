@@ -17,6 +17,7 @@ import { ProjectModal } from "../../components/ProjectModal";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import { useProjectManager } from "../../hooks/useProjectManager";
 import { useAudioExporter } from "../../hooks/useAudioExporter";
+import { UploadLoopsButton } from "../../components/UploadLoopsButton";
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -281,7 +282,8 @@ export default function DAWPage() {
     };
 
     const loadMockTracks = () => {
-      const audioContext = initAudioContext();
+      // ensure audio context is initialized before creating buffers
+      initAudioContext();
       const mockTracks: AudioTrack[] = [
         {
           id: 'mock-1',
@@ -308,7 +310,7 @@ export default function DAWPage() {
     if (isLoaded && isSignedIn) {
       loadSessionAudio();
     }
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, isLoaded, initAudioContext, createEmptyAudioBufferWithDuration, initializeTrackState]);
 
   if (!isLoaded) {
     return (
@@ -501,6 +503,14 @@ export default function DAWPage() {
           onOpenProjectModal={handleOpenProjectModal}
           onExportWAV={handleExportWAV}
         />
+
+        <div className="px-4 pt-2">
+          <UploadLoopsButton
+            onUploaded={(p) => {
+              console.log('uploaded loop url', p.url);
+            }}
+          />
+        </div>
 
         <main className="flex-1 p-4 overflow-hidden">
           <div className="max-w-full mx-auto space-y-4 h-full flex flex-col">
