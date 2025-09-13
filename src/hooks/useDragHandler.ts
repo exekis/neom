@@ -24,16 +24,19 @@ export function useDragHandler({
 
     if (!timelineRef.current) return;
 
+    const timelineRect = timelineRef.current.getBoundingClientRect();
+    const initialTrackPixels = track.startTime * pixelsPerSecond;
+
     setIsDragging(true);
     setDragStartX(e.clientX);
-    setDragStartPixels(track.startTime * pixelsPerSecond);
+    setDragStartPixels(initialTrackPixels);
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!timelineRef.current) return;
 
-      const deltaX = e.clientX - dragStartX;
-      const newPixelPosition = dragStartPixels + deltaX;
-      const newStartTime = newPixelPosition / pixelsPerSecond;
+      const timelineRect = timelineRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - timelineRect.left;
+      const newStartTime = Math.max(0, mouseX / pixelsPerSecond);
 
       onUpdateTrackStartTime(track.id, newStartTime);
     };

@@ -41,11 +41,6 @@ export function AudioUploader({ onFileUpload }: AudioUploaderProps) {
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="space-y-4">
-          <div className="text-5xl mb-4">
-            <span className="text-white">
-              🎵
-            </span>
-          </div>
           <div>
             <p className="text-xl font-semibold text-white mb-2">
               Drop audio files here or click to browse

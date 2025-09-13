@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AudioTrack } from '../types/AudioTrack';
+import { LayersWorkflow } from '@/components/workflows/LayersWorkflow';
+import { VocalsWorkflow } from '@/components/workflows/VocalsWorkflow';
+import { DescribeWorkflow } from '@/components/workflows/DescribeWorkflow';
+import { RemixWorkflow } from '@/components/workflows/RemixWorkflow';
 
 interface ChatMessage {
   id: string;
@@ -16,9 +20,12 @@ interface ChatSidebarProps {
   onClose: () => void;
   tracks?: AudioTrack[];
   onApplyEffect?: (effect: Record<string, unknown>) => void;
+  onAddTrackFromAI?: (args: { name: string; audioBuffer: AudioBuffer; audioUrl: string }) => void;
 }
 
-export function ChatSidebar({ isOpen, onClose, tracks = [] }: ChatSidebarProps) {
+type RightPanelTab = 'chat' | 'layers' | 'vocals' | 'describe' | 'remix';
+
+export function ChatSidebar({ isOpen, onClose, tracks = [], onAddTrackFromAI }: ChatSidebarProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -28,6 +35,7 @@ export function ChatSidebar({ isOpen, onClose, tracks = [] }: ChatSidebarProps) 
     }
   ]);
   const [inputText, setInputText] = useState('');
+  const [activeTab, setActiveTab] = useState<RightPanelTab>('chat');
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
@@ -69,28 +77,36 @@ export function ChatSidebar({ isOpen, onClose, tracks = [] }: ChatSidebarProps) 
     }
   };
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 shadow-2xl z-50 flex flex-col"
-        >
-          <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
-            <h2 className="text-lg font-semibold text-white">
-              AI Assistant
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-white text-xl cursor-pointer"
-            >
-              ×
-            </button>
-          </div>
+  const renderTabBar = () => (
+    <div className="px-4 pt-3 border-b border-slate-800/60">
+      <div className="flex gap-2">
+        {[
+          { key: 'chat', label: 'Chat' },
+          { key: 'layers', label: 'Layers' },
+          { key: 'vocals', label: 'Vocals' },
+          { key: 'describe', label: 'Describe' },
+          { key: 'remix', label: 'Remix' },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key as RightPanelTab)}
+            className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors ${
+              activeTab === (t.key as RightPanelTab)
+                ? 'bg-purple-600 text-white'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
+  const renderContent = () => {
+    if (activeTab === 'chat') {
+      return (
+        <>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
               <motion.div
@@ -106,7 +122,7 @@ export function ChatSidebar({ isOpen, onClose, tracks = [] }: ChatSidebarProps) 
                       : 'bg-slate-800 text-slate-200'
                   }`}
                 >
-                  <p className="text-sm">{message.text}</p>
+                  <p className="text-sm whitespace-pre-line">{message.text}</p>
                   <p className={`text-xs mt-1 opacity-70 ${
                     message.isUser ? 'text-purple-200' : 'text-slate-400'
                   }`}>
@@ -136,6 +152,65 @@ export function ChatSidebar({ isOpen, onClose, tracks = [] }: ChatSidebarProps) 
               </button>
             </div>
           </div>
+        </>
+      );
+    }
+
+    // Workflows embedded
+    const onApplyToDAW = async (args: { audioBuffer: AudioBuffer; audioUrl: string; name: string }) => {
+      if (onAddTrackFromAI) {
+        onAddTrackFromAI({ name: args.name, audioBuffer: args.audioBuffer, audioUrl: args.audioUrl });
+      }
+    };
+
+    const workflowCommonProps = {
+      onBack: () => setActiveTab('chat' as RightPanelTab),
+      onApplyToDAW,
+    } as const;
+
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4">
+          {activeTab === 'layers' && (
+            <LayersWorkflow {...workflowCommonProps} />
+          )}
+          {activeTab === 'vocals' && (
+            <VocalsWorkflow {...workflowCommonProps} />
+          )}
+          {activeTab === 'describe' && (
+            <DescribeWorkflow {...workflowCommonProps} />
+          )}
+          {activeTab === 'remix' && (
+            <RemixWorkflow {...workflowCommonProps} />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="fixed right-0 top-0 h-full w-[28rem] bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 shadow-2xl z-50 flex flex-col"
+        >
+          <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
+            <h2 className="text-lg font-semibold text-white">
+              AI Assistant
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-white text-xl cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+          {renderTabBar()}
+          {renderContent()}
         </motion.div>
       )}
     </AnimatePresence>

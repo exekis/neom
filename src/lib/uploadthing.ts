@@ -3,7 +3,7 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  audioUploader: f({ audio: { maxFileSize: "250MB" } })
+  audioUploader: f({ audio: { maxFileSize: "256MB" } })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata);
       console.log("file url", file.url);

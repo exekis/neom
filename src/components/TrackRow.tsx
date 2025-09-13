@@ -2,9 +2,7 @@
 
 import { useRef } from "react";
 import { AudioTrack } from "../types/AudioTrack";
-import { TimelineMarkers } from "./TimelineMarkers";
 import { AudioBlock } from "./AudioBlock";
-import { PlaybackCursor } from "./PlaybackCursor";
 import { useDragHandler } from "../hooks/useDragHandler";
 
 interface TrackRowProps {
@@ -42,7 +40,7 @@ export function TrackRow({
 
   return (
     <div className="flex items-center hover:bg-slate-800/30 transition-colors duration-200">
-      <div className="w-40 p-6 bg-slate-800/30 border-r border-slate-700/30 flex items-center justify-between">
+      <div className="w-40 p-3 bg-slate-800/30 border-r border-slate-700/30 flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-white mb-1">
             Track {trackNumber}
@@ -64,12 +62,10 @@ export function TrackRow({
       </div>
 
       <div
-        className="flex-1 p-6 relative cursor-pointer"
+        className="flex-1 p-3 relative cursor-pointer"
         onClick={() => onTrackClick(index)}
       >
-        <TimelineMarkers pixelsPerSecond={PIXELS_PER_SECOND} />
-
-        <div className="mt-6 relative h-12 overflow-visible" ref={timelineRef}>
+        <div className="relative h-12 overflow-visible" ref={timelineRef}>
           <AudioBlock
             track={track}
             isSelected={isSelected}
@@ -80,11 +76,6 @@ export function TrackRow({
             index={index}
           />
 
-          <PlaybackCursor
-            currentTime={currentTime}
-            pixelsPerSecond={PIXELS_PER_SECOND}
-            isVisible={isPlaying}
-          />
 
           {track.startTime > 0 && (
             <div

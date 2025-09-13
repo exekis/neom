@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { SignInButton, useUser } from '@clerk/nextjs';
+import NextDynamic from 'next/dynamic';
+import Link from 'next/link';
 import { Music, Activity, Zap, Play, Pause, Volume2, VolumeX, ChevronDown, Layers, Mic, FileText, Shuffle, ArrowRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -340,8 +341,13 @@ const StartingPointModal = ({ onClose, onSelect }: { onClose: () => void; onSele
   );
 };
 
+const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+type SignInBtnProps = { children: React.ReactNode; mode?: 'modal' | 'redirect'; afterSignInUrl?: string; afterSignUpUrl?: string; redirectUrl?: string };
+const SignInButtonDyn: React.ComponentType<SignInBtnProps> = hasClerk
+  ? NextDynamic(() => import('@clerk/nextjs').then(m => m.SignInButton), { ssr: false })
+  : function FallbackSignIn({ children }: { children: React.ReactNode }) { return <Link href="/daw">{children}</Link>; };
+
 export function LandingPage() {
-  const { isSignedIn, isLoaded } = useUser();
   const [showStartingPointModal, setShowStartingPointModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -359,13 +365,6 @@ export function LandingPage() {
   };
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (isSignedIn) {
-      setShowStartingPointModal(true);
-      return;
-    }
-
     const ctx = gsap.context(() => {
 
       ScrollTrigger.create({
@@ -404,55 +403,7 @@ export function LandingPage() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [isLoaded, isSignedIn]);
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden">
-        <ParticlesBackground />
-
-        <div className="relative z-10 text-center">
-          {/* Custom Loading Animation */}
-          <div className="mb-8">
-            <div className="flex items-center justify-center space-x-2">
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-4 h-12 bg-slate-300 rounded-full"
-                  animate={{
-                    scaleY: [0.3, 1, 0.3],
-                    opacity: [0.5, 1, 0.5]
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-4xl font-black mb-4 text-white"
-          >
-            NEOM
-          </motion.h1>
-
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="text-slate-400 text-lg"
-          >
-            Initializing Audio Engine...
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <>
@@ -463,7 +414,6 @@ export function LandingPage() {
         />
       )}
 
-      {!isSignedIn && (
     <div ref={containerRef} className="bg-slate-950 text-white relative">
       <AudioPlayer />
       <ParticlesBackground />
@@ -619,17 +569,11 @@ export function LandingPage() {
             Join thousands of creators using AI to enhance their audio production workflow
           </p>
 
-          <SignInButton mode="modal">
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="group px-16 py-6 bg-white text-slate-950 text-xl font-semibold rounded-2xl
-                         hover:bg-slate-100 transition-all duration-300 cursor-pointer
-                         shadow-2xl hover:shadow-white/10"
-            >
+          <SignInButtonDyn mode="modal" afterSignInUrl="/daw" afterSignUpUrl="/daw">
+            <ClerkButtonChild>
               Enter Studio
-            </motion.button>
-          </SignInButton>
+            </ClerkButtonChild>
+          </SignInButtonDyn>
         </div>
       </section>
 
@@ -640,7 +584,21 @@ export function LandingPage() {
         </div>
       </footer>
     </div>
-      )}
     </>
+  );
+}
+
+function ClerkButtonChild({ onClick, children }: { onClick?: React.MouseEventHandler; children: React.ReactNode }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.95 }}
+      className="group px-16 py-6 bg-white text-slate-950 text-xl font-semibold rounded-2xl
+                 hover:bg-slate-100 transition-all duration-300 cursor-pointer
+                 shadow-2xl hover:shadow-white/10"
+    >
+      {children}
+    </motion.button>
   );
 }

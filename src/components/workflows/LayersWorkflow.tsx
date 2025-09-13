@@ -9,13 +9,14 @@ import WaveformModal from '@/components/WaveformModal';
 
 interface LayersWorkflowProps {
   onBack: () => void;
+  onApplyToDAW?: (args: { audioBuffer: AudioBuffer; audioUrl: string; name: string }) => void;
 }
 
 const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const MODES = ['Major', 'Minor'];
 const BARS = [8, 16, 32];
 
-export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
+export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
   const [message, setMessage] = useState('');
   const [selectedKey, setSelectedKey] = useState('C');
   const [selectedMode, setSelectedMode] = useState('Major');
@@ -32,7 +33,7 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
     audioUrl,
     error,
     message: generationMessage,
-    generateAudio,
+    aiRouteRun,
     reset
   } = useAudioGeneration();
 
@@ -53,16 +54,38 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
     setShowWaveformModal(false);
     reset();
 
-    await generateAudio({
-      type: 'layers',
-      prompt: message,
-      parameters: {
-        key: selectedKey,
-        style: selectedMode.toLowerCase(),
-        tempo: parseInt(bpm),
-        duration: selectedBars * (60 / parseInt(bpm)) * 4 // Calculate duration based on bars and BPM
+    // For now, use the demo original as per integration notes
+    const projectId = 'demo1';
+    const originalPath = '/srv/neom/files/demo1/try1.wav';
+    const textParts = [message.trim()];
+    // Optionally include parameters into the text to guide the LLM
+    if (selectedKey) textParts.push(`key ${selectedKey} ${selectedMode.toLowerCase()}`);
+    if (bpm) textParts.push(`${bpm} bpm`);
+    if (selectedBars) textParts.push(`${selectedBars} bars`);
+
+    try {
+      const data = await aiRouteRun({
+        projectId,
+        originalPath,
+        text: textParts.filter(Boolean).join(', ')
+      });
+
+      // Optionally prefetch manifest to show later
+      if (data?.manifestUrl) {
+        const manifestRes = await fetch(`http://20.161.72.50${data.manifestUrl}`);
+        if (manifestRes.ok) {
+          await manifestRes.json();
+          // In the future we can surface this in a provenance panel
+        }
       }
-    });
+
+      // Optionally warm up history endpoint
+      try {
+        await fetch(`http://20.161.72.50/api/projects/${projectId}/ops?limit=10`);
+      } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const loadAudioFromUrl = async (url: string) => {
@@ -97,10 +120,18 @@ export function LayersWorkflow({ onBack }: LayersWorkflowProps) {
 
   const handleOpenInDAW = () => {
     if (audioUrl && audioBuffer) {
+      const name = `Generated ${selectedKey} ${selectedMode.toLowerCase()} loop`;
+      if (onApplyToDAW) {
+        onApplyToDAW({ audioBuffer, audioUrl, name });
+        setShowWaveformModal(false);
+        return;
+      }
       sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', `Generated ${selectedKey} ${selectedMode.toLowerCase()} loop`);
+      sessionStorage.setItem('daw-audio-name', name);
     }
-    window.location.href = '/daw';
+    if (!onApplyToDAW) {
+      window.location.href = '/daw';
+    }
   };
 
   return (

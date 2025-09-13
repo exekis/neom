@@ -9,6 +9,7 @@ import WaveformModal from '@/components/WaveformModal';
 
 interface DescribeWorkflowProps {
   onBack: () => void;
+  onApplyToDAW?: (args: { audioBuffer: AudioBuffer; audioUrl: string; name: string }) => void;
 }
 
 const INSPIRE_PROMPTS = [
@@ -22,7 +23,7 @@ const INSPIRE_PROMPTS = [
   "Minimalist techno with hypnotic rhythms"
 ];
 
-export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
+export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps) {
   const [message, setMessage] = useState('');
   const [contentType, setContentType] = useState<'instrumental' | 'lyrics'>('instrumental');
   const [generateLyrics, setGenerateLyrics] = useState(false);
@@ -105,10 +106,18 @@ export function DescribeWorkflow({ onBack }: DescribeWorkflowProps) {
 
   const handleOpenInDAW = () => {
     if (audioUrl && audioBuffer) {
+      const name = `Generated ${contentType} track`;
+      if (onApplyToDAW) {
+        onApplyToDAW({ audioBuffer, audioUrl, name });
+        setShowWaveformModal(false);
+        return;
+      }
       sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', `Generated ${contentType} track`);
+      sessionStorage.setItem('daw-audio-name', name);
     }
-    window.location.href = '/daw';
+    if (!onApplyToDAW) {
+      window.location.href = '/daw';
+    }
   };
 
   return (
