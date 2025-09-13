@@ -2,20 +2,17 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useUser } from "@clerk/nextjs";
 import { AudioTrack } from "../../types/AudioTrack";
-import { AudioUploader } from "../../components/AudioUploader";
-import { TrackView } from "../../components/TrackView";
-import { AudioControls } from "../../components/AudioControls";
+import { TimelineCursor } from "../../components/TimelineCursor";
+import { EnhancedTrackView } from "../../components/EnhancedTrackView";
+import { DAWHeader } from "../../components/DAWHeader";
+import { DAWSidebar } from "../../components/DAWSidebar";
 import { ChatSidebar } from "../../components/ChatSidebar";
+import { HotkeysModal } from "../../components/HotkeysModal";
+import { WorkspaceModal } from "../../components/WorkspaceModal";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
-import { LogOut } from "lucide-react";
-import NextDynamic from "next/dynamic";
-
-const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const SignOutButton = hasClerk
-  ? NextDynamic(() => import("@clerk/nextjs").then(m => m.SignOutButton), { ssr: false })
-  : (function FallbackSignOutButton({ children }: { children: React.ReactNode }) { return <>{children}</>; });
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -26,24 +23,119 @@ const TRACK_COLORS = [
   "#06b6d4", // cyan
 ];
 
+interface TrackState {
+  id: string;
+  isMuted: boolean;
+  isSolo: boolean;
+  volume: number;
+}
+
 export default function DAWPage() {
-  // Avoid using Clerk hooks to prevent build-time provider errors.
-  const isLoaded = true;
-  const isSignedIn = true;
-  const user = { firstName: 'User' } as { firstName?: string | null };
+  const { isSignedIn, isLoaded } = useUser();
   const [tracks, setTracks] = useState<AudioTrack[]>([]);
   const [selectedTrackIndex, setSelectedTrackIndex] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [projectName, setProjectName] = useState("Untitled Project");
+  const [trackStates, setTrackStates] = useState<{ [trackId: string]: TrackState }>({});
+  const [isRecording, setIsRecording] = useState(false);
+  const [isLooping, setIsLooping] = useState(false);
+  const [isMetronomeEnabled, setIsMetronomeEnabled] = useState(false);
+  const [masterVolume, setMasterVolume] = useState(80);
+  const [undoStack] = useState<string[]>([]);
+  const [redoStack] = useState<string[]>([]);
+  const [showHotkeys, setShowHotkeys] = useState(false);
+  const [showWorkspace, setShowWorkspace] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const { isPlaying, currentTime, play, pause, stop } = useAudioPlayer({
+  const { isPlaying, currentTime, play, pause, stop, seek } = useAudioPlayer({
     audioContext: audioContextRef.current
   });
+
+  // Define initAudioContext first to avoid lexical declaration errors
+  const initAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      audioContextRef.current = new AudioContextClass();
+    }
+    return audioContextRef.current;
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (undoStack.length > 0) {
+      console.log('Undo action');
+    }
+  }, [undoStack.length]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.length > 0) {
+      console.log('Redo action');
+    }
+  }, [redoStack.length]);
+
+  const createEmptyAudioBuffer = useCallback((): AudioBuffer => {
+    const audioContext = initAudioContext();
+    const sampleRate = audioContext.sampleRate;
+    const duration = 30;
+    const buffer = audioContext.createBuffer(2, sampleRate * duration, sampleRate);
+    return buffer;
+  }, [initAudioContext]);
+
+  const createEmptyAudioBufferWithDuration = useCallback((duration: number): AudioBuffer => {
+    const audioContext = initAudioContext();
+    const sampleRate = audioContext.sampleRate;
+    const buffer = audioContext.createBuffer(2, sampleRate * duration, sampleRate);
+    return buffer;
+  }, [initAudioContext]);
+
+  const initializeTrackState = useCallback((trackId: string) => {
+    setTrackStates(prev => ({
+      ...prev,
+      [trackId]: {
+        id: trackId,
+        isMuted: false,
+        isSolo: false,
+        volume: 100
+      }
+    }));
+  }, []);
+
+  const addNewTrack = useCallback(() => {
+    const newTrack: AudioTrack = {
+      id: Date.now().toString(),
+      name: `Track ${tracks.length + 1}`,
+      audioBuffer: createEmptyAudioBuffer(),
+      color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
+      startTime: 0,
+      duration: 30,
+    };
+    setTracks(prev => [...prev, newTrack]);
+    initializeTrackState(newTrack.id);
+  }, [tracks.length, createEmptyAudioBuffer, initializeTrackState]);
 
   // Keyboard hotkeys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle hotkeys if not typing in an input field
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Check for Ctrl/Cmd combinations first
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case 'z':
+            e.preventDefault();
+            if (e.shiftKey) {
+              handleRedo(); // Ctrl+Shift+Z for redo
+            } else {
+              handleUndo(); // Ctrl+Z for undo
+            }
+            break;
+          case 'y':
+            e.preventDefault();
+            handleRedo(); // Ctrl+Y for redo
+            break;
+        }
         return;
       }
 
@@ -58,19 +150,26 @@ export default function DAWPage() {
             }
           }
           break;
-        case 'Enter': // Enter - play/pause (alternative)
+        case 'r': // R - record toggle
+        case 'R':
           e.preventDefault();
-          if (tracks.length > 0) {
-            if (isPlaying) {
-              pause();
-            } else {
-              play(tracks);
-            }
-          }
+          setIsRecording(!isRecording);
+          break;
+        case 'l': // L - loop toggle
+        case 'L':
+          e.preventDefault();
+          setIsLooping(!isLooping);
           break;
         case 'Escape': // Escape - stop
           e.preventDefault();
           stop();
+          break;
+        case 'q': // Q - add new track
+        case 'Q':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            addNewTrack();
+          }
           break;
       }
     };
@@ -89,7 +188,7 @@ export default function DAWPage() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [tracks, isPlaying, play, pause, stop]);
+  }, [tracks, isPlaying, play, pause, stop, isRecording, isLooping, handleUndo, handleRedo, addNewTrack]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -97,7 +196,7 @@ export default function DAWPage() {
       return;
     }
 
-    // Load audio from sessionStorage if coming from workflow
+    // Load audio from sessionStorage if coming from workflow or create mock tracks
     const loadSessionAudio = async () => {
       const audioUrl = sessionStorage.getItem('daw-audio-url');
       const audioName = sessionStorage.getItem('daw-audio-name');
@@ -119,6 +218,7 @@ export default function DAWPage() {
           };
 
           setTracks([newTrack]);
+          initializeTrackState(newTrack.id);
 
           // Show success message
           console.log(`Successfully loaded: ${audioName}`);
@@ -128,8 +228,38 @@ export default function DAWPage() {
           sessionStorage.removeItem('daw-audio-name');
         } catch (error) {
           console.error('Error loading audio from workflow:', error);
+          // Load mock tracks on error
+          loadMockTracks();
         }
+      } else {
+        // Load mock tracks for demo
+        loadMockTracks();
       }
+    };
+
+    const loadMockTracks = () => {
+      const audioContext = initAudioContext();
+      const mockTracks: AudioTrack[] = [
+        {
+          id: 'mock-1',
+          name: 'Intro Jazz',
+          audioBuffer: createEmptyAudioBufferWithDuration(245.5),
+          color: TRACK_COLORS[0],
+          startTime: 0,
+          duration: 245.5,
+        },
+        {
+          id: 'mock-2',
+          name: 'Drum Beat',
+          audioBuffer: createEmptyAudioBufferWithDuration(180),
+          color: TRACK_COLORS[1],
+          startTime: 10,
+          duration: 180,
+        }
+      ];
+
+      setTracks(mockTracks);
+      mockTracks.forEach(track => initializeTrackState(track.id));
     };
 
     if (isLoaded && isSignedIn) {
@@ -149,43 +279,55 @@ export default function DAWPage() {
     return null;
   }
 
-  const initAudioContext = () => {
-    if (!audioContextRef.current) {
-      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      audioContextRef.current = new AudioContextClass();
-    }
-    return audioContextRef.current;
-  };
-
-  const handleFileUpload = async (file: File) => {
-    try {
-      const audioContext = initAudioContext();
-      const arrayBuffer = await file.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-      const newTrack: AudioTrack = {
-        id: Date.now().toString(),
-        name: file.name,
-        audioBuffer,
-        color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
-        startTime: 0,
-        duration: audioBuffer.duration,
-      };
-
-      setTracks(prev => [...prev, newTrack]);
-      stop();
-    } catch {
-      alert("Error processing audio file. Please make sure it's a valid audio format.");
-    }
-  };
-
   const handleTrackClick = (index: number) => {
     setSelectedTrackIndex(selectedTrackIndex === index ? null : index);
   };
 
   const removeTrack = (trackId: string) => {
     setTracks(prev => prev.filter(track => track.id !== trackId));
+    setTrackStates(prev => {
+      const newStates = { ...prev };
+      delete newStates[trackId];
+      return newStates;
+    });
     setSelectedTrackIndex(null);
+  };
+
+
+  const handleTrackMuteToggle = (trackId: string) => {
+    setTrackStates(prev => ({
+      ...prev,
+      [trackId]: {
+        ...prev[trackId],
+        isMuted: !prev[trackId]?.isMuted
+      }
+    }));
+  };
+
+  const handleTrackSoloToggle = (trackId: string) => {
+    setTrackStates(prev => ({
+      ...prev,
+      [trackId]: {
+        ...prev[trackId],
+        isSolo: !prev[trackId]?.isSolo
+      }
+    }));
+  };
+
+  const handleTrackVolumeChange = (trackId: string, volume: number) => {
+    setTrackStates(prev => ({
+      ...prev,
+      [trackId]: {
+        ...prev[trackId],
+        volume
+      }
+    }));
+  };
+
+  const handleTrackNameChange = (trackId: string, newName: string) => {
+    setTracks(prev => prev.map(track =>
+      track.id === trackId ? { ...track, name: newName } : track
+    ));
   };
 
   const updateTrackStartTime = (trackId: string, newStartTime: number) => {
@@ -206,73 +348,98 @@ export default function DAWPage() {
       duration: args.audioBuffer.duration,
     };
     setTracks(prev => [...prev, newTrack]);
-    // Optionally close chat after adding
-    setIsChatOpen(true);
+    initializeTrackState(newTrack.id);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
       <div className="flex-1 flex flex-col">
-        <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700/50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-white">
-              NEOM Studio
-            </h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400">
-                Welcome, {user?.firstName || 'User'}
-              </span>
-              <button
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer"
-              >
-                {isChatOpen ? 'Hide AI' : 'Open AI Assistant'}
-              </button>
-              <SignOutButton>
-                <button className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </SignOutButton>
-            </div>
-          </div>
-        </header>
+        <DAWHeader
+          projectName={projectName}
+          onProjectNameChange={setProjectName}
+          isPlaying={isPlaying}
+          isRecording={isRecording}
+          isLooping={isLooping}
+          isMetronomeEnabled={isMetronomeEnabled}
+          onPlay={() => tracks.length > 0 && play(tracks)}
+          onPause={pause}
+          onStop={stop}
+          onRecord={() => setIsRecording(!isRecording)}
+          onToggleLoop={() => setIsLooping(!isLooping)}
+          onToggleMetronome={() => setIsMetronomeEnabled(!isMetronomeEnabled)}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={undoStack.length > 0}
+          canRedo={redoStack.length > 0}
+          masterVolume={masterVolume}
+          onMasterVolumeChange={setMasterVolume}
+          onOpenAssistant={() => setIsSidebarOpen(true)}
+          onShowHotkeys={() => setShowHotkeys(true)}
+          onShowWorkspace={() => setShowWorkspace(true)}
+        />
 
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <AudioUploader onFileUpload={handleFileUpload} />
+        <main className="flex-1 p-4 overflow-hidden">
+          <div className="max-w-full mx-auto space-y-4 h-full flex flex-col">
 
-            {tracks.length > 0 && (
-              <AudioControls
-                isPlaying={isPlaying}
+            <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/40 p-5">
+              <TimelineCursor
                 currentTime={currentTime}
-                onPlay={() => tracks.length > 0 && play(tracks)}
-                onPause={pause}
-                onStop={stop}
+                duration={Math.max(...tracks.map(track => track.startTime + track.duration), 120)}
+                isPlaying={isPlaying}
+                onSeek={seek}
               />
-            )}
+            </div>
 
-            <TrackView
-              tracks={tracks}
-              selectedTrackIndex={selectedTrackIndex}
-              onTrackClick={handleTrackClick}
-              onRemoveTrack={removeTrack}
-              onUpdateTrackStartTime={updateTrackStartTime}
-              currentTime={currentTime}
-              isPlaying={isPlaying}
-            />
+            <div className="flex-1 min-h-0 timeline-container overflow-y-auto bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-4">
+              <EnhancedTrackView
+                tracks={tracks}
+                selectedTrackIndex={selectedTrackIndex}
+                trackStates={trackStates}
+                onTrackClick={handleTrackClick}
+                onRemoveTrack={removeTrack}
+                onUpdateTrackStartTime={updateTrackStartTime}
+                onTrackMuteToggle={handleTrackMuteToggle}
+                onTrackSoloToggle={handleTrackSoloToggle}
+                onTrackVolumeChange={handleTrackVolumeChange}
+                onTrackNameChange={handleTrackNameChange}
+                onTrackSettings={(trackId) => console.log('Track settings:', trackId)}
+                onTrackAIAgent={(trackId) => console.log('Track AI agent:', trackId)}
+                currentTime={currentTime}
+                isPlaying={isPlaying}
+                onSeek={seek}
+              />
+            </div>
           </div>
         </main>
       </div>
+
+      <DAWSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
       <ChatSidebar
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         tracks={tracks}
         onApplyEffect={(effect) => {
-          // Handle audio effect application
           console.log('Applying effect:', effect);
         }}
         onAddTrackFromAI={handleAddTrackFromAI}
+      />
+
+      <HotkeysModal
+        isOpen={showHotkeys}
+        onClose={() => setShowHotkeys(false)}
+      />
+
+      <WorkspaceModal
+        isOpen={showWorkspace}
+        onClose={() => setShowWorkspace(false)}
+        onAddToTimeline={(audioFile) => {
+          console.log('Adding audio file to timeline:', audioFile);
+          setShowWorkspace(false);
+        }}
       />
     </div>
   );
