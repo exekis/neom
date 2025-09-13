@@ -3,7 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 const isProtectedRoute = createRouteMatcher([
-  '/daw(.*)',
+  '/daw(.*)',  // Re-enabled with proper client-side auth handling
 ])
 
 export default clerkMiddleware(async (auth, req) => {
