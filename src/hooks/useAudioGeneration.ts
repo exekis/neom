@@ -38,7 +38,7 @@ export function useAudioGeneration() {
   // Calls external AI router to select op + run it,
   // then sets audioUrl to the produced file URL.
   const aiRouteRun = useCallback(async (args: { projectId: string; originalPath: string; text: string }) => {
-    const API = 'http://20.161.72.50/api';
+    const API = '/api';
     try {
       setState(prev => ({ ...prev, isGenerating: true, progress: 5, message: 'Contacting AI router...' }));
 
@@ -49,16 +49,23 @@ export function useAudioGeneration() {
       });
 
       if (!res.ok) {
-        throw new Error(`AI route failed: ${res.status}`);
+        let details = '';
+        try {
+          const errJson = await res.json();
+          details = errJson?.error || errJson?.details || '';
+        } catch {
+          try { details = await res.text(); } catch {}
+        }
+        throw new Error(`AI route failed: ${res.status}${details ? ` — ${details}` : ''}`);
       }
 
       // Increment progress a bit while parsing
       setState(prev => ({ ...prev, progress: 40, message: 'Routing successful. Executing operation...' }));
 
-      const data = await res.json();
-      // data.modifiedUrl is a "/files/..." path. Prefix with host
-      const filesBase = 'http://20.161.72.50';
-      const absoluteAudioUrl = `${filesBase}${data.modifiedUrl}`;
+  const data = await res.json();
+  // data.modifiedUrl is a "/files/..." path from the upstream API. Prefix with host
+  const filesBase = process.env.NEXT_PUBLIC_FILES_BASE || 'http://20.161.72.50';
+  const absoluteAudioUrl = `${filesBase}${data.modifiedUrl}`;
 
       setState(prev => ({ ...prev, progress: 100, message: 'Generation complete!' }));
 

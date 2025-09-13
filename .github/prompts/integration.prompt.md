@@ -2,7 +2,6 @@
 mode: agent
 ---
 Neom Audio Backend — Integration Guide
-TL;DR
 
 Public base URL: http://20.161.72.50
 
