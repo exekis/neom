@@ -4,17 +4,23 @@ import { useRef, useEffect, useState } from "react";
 
 interface TimelineCursorProps {
   currentTime: number;
+  clickPosition: number;
+  lastPlayPosition: number;
   duration: number;
   isPlaying: boolean;
   onSeek: (time: number) => void;
+  onSetClickPosition: (time: number) => void;
   pixelsPerSecond?: number;
 }
 
 export function TimelineCursor({
   currentTime,
+  clickPosition,
+  lastPlayPosition,
   duration,
   isPlaying,
   onSeek,
+  onSetClickPosition,
   pixelsPerSecond = 60
 }: TimelineCursorProps) {
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -31,11 +37,17 @@ export function TimelineCursor({
     const rect = timelineRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickTime = (clickX / rect.width) * duration;
+    const clampedTime = Math.max(0, Math.min(duration, clickTime));
 
     setIsDragging(true);
     setDragStartX(clickX);
-    setDragStartTime(clickTime);
-    onSeek(Math.max(0, Math.min(duration, clickTime)));
+    setDragStartTime(clampedTime);
+
+    // Set click position (for spacebar playback)
+    onSetClickPosition(clampedTime);
+
+    // Immediately seek to this position
+    onSeek(clampedTime);
   };
 
   const handleMouseMove = (e: MouseEvent) => {
@@ -119,7 +131,33 @@ export function TimelineCursor({
           }}
         />
 
-        {/* Cursor/Playhead */}
+        {/* Click Position Marker (Spacebar target) */}
+        {clickPosition > 0 && (
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-amber-400/70 pointer-events-none z-[8]"
+            style={{
+              left: `${Math.min(100, (clickPosition / duration) * 100)}%`
+            }}
+          >
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-3 bg-amber-400 rounded-sm">
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-transparent border-t-amber-400" />
+            </div>
+          </div>
+        )}
+
+        {/* Last Play Position Marker (Enter target) */}
+        {lastPlayPosition > 0 && lastPlayPosition !== currentTime && (
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-green-400/60 pointer-events-none z-[7]"
+            style={{
+              left: `${Math.min(100, (lastPlayPosition / duration) * 100)}%`
+            }}
+          >
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-3 bg-green-400 rounded-sm opacity-80" />
+          </div>
+        )}
+
+        {/* Cursor/Playhead (active playback position) */}
         <div
           className={`absolute top-0 bottom-0 w-1 bg-gradient-to-b from-slate-200 to-slate-400 pointer-events-none z-10 rounded-full ${
             isPlaying ? 'shadow-lg shadow-slate-500/60' : 'shadow-md shadow-slate-500/40'
@@ -142,9 +180,23 @@ export function TimelineCursor({
         )}
       </div>
 
-      <div className="flex justify-center mt-2">
+      <div className="flex justify-center mt-2 space-x-4">
         <div className="text-xs text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-full border border-slate-700/30 backdrop-blur-sm">
           Click or drag to scrub timeline
+        </div>
+        <div className="flex items-center space-x-2 text-xs text-slate-500">
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-amber-400 rounded"></div>
+            <span>Click position (Space)</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-green-400 rounded"></div>
+            <span>Last play (Enter)</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-slate-300 rounded"></div>
+            <span>Playhead</span>
+          </div>
         </div>
       </div>
     </div>
