@@ -88,11 +88,25 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     }
   }, [audioContext, isPlaying, stop]);
 
+  const seek = useCallback((time: number) => {
+    const wasPlaying = isPlaying;
+    if (isPlaying) {
+      stop();
+    }
+    pausedAtRef.current = Math.max(0, time);
+    setCurrentTime(time);
+    if (wasPlaying) {
+      // Resume playback from new position would require re-creating audio nodes
+      // For now just update the time position
+    }
+  }, [isPlaying, stop]);
+
   return {
     isPlaying,
     currentTime,
     play,
     pause,
-    stop
+    stop,
+    seek
   };
 }

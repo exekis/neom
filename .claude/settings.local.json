@@ -22,7 +22,9 @@
       "Bash(git commit:*)",
       "Bash(sed:*)",
       "Bash(git pull:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(tasklist:*)",
+      "Bash(timeout 10 curl http://localhost:3005/daw)"
     ],
     "deny": [],
     "ask": []
