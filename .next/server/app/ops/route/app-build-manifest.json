@@ -1,0 +1,10 @@
+{
+  "pages": {
+    "/ops/route": [
+      "static/chunks/f5bcb0d1b2858876.js",
+      "static/chunks/8c1a5867f8e44625.js",
+      "static/chunks/72670ebd76f8cc57.js",
+      "static/chunks/turbopack-d764906dba91760f.js"
+    ]
+  }
+}

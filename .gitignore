@@ -1,0 +1,3 @@
+# ignore the whole example folder
+example/
+node_modules
