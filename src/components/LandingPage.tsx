@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { SignInButton, useUser } from '@clerk/nextjs';
-import { Music, Activity, Zap, Play, Volume2, VolumeX, ChevronDown } from 'lucide-react';
+import { Music, Activity, Zap, Play, Pause, Volume2, VolumeX, ChevronDown, Layers, Mic, FileText, Shuffle, ArrowRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Particles from 'react-particles';
@@ -36,8 +36,19 @@ const ParticlesBackground = () => {
             resize: true
           },
           modes: {
-            push: { quantity: 4 },
-            repulse: { distance: 200, duration: 0.4 }
+            push: { quantity: 2 },
+            repulse: {
+              distance: 200,
+              duration: 0.4,
+              factor: 100,
+              speed: 1
+            },
+            attract: {
+              distance: 200,
+              duration: 0.4,
+              factor: 5,
+              speed: 1
+            }
           }
         },
         particles: {
@@ -47,24 +58,55 @@ const ParticlesBackground = () => {
             distance: 150,
             enable: true,
             opacity: 0.3,
-            width: 1
+            width: 1,
+            triangles: {
+              enable: false
+            }
           },
           move: {
             direction: "none",
             enable: true,
-            outModes: { default: "bounce" },
-            random: false,
+            outModes: {
+              default: "bounce",
+              top: "bounce",
+              bottom: "bounce",
+              left: "bounce",
+              right: "bounce"
+            },
+            random: true,
             speed: 2,
-            straight: false
+            straight: false,
+            attract: {
+              enable: true,
+              rotateX: 600,
+              rotateY: 1200
+            }
           },
           number: {
             density: { enable: true, area: 800 },
-            value: 80
+            value: 80,
+            max: 150
           },
-          opacity: { value: 0.5 },
+          opacity: {
+            value: 0.6,
+            random: true,
+            animation: {
+              enable: true,
+              speed: 1,
+              minimumValue: 0.1,
+              sync: false
+            }
+          },
           shape: { type: "circle" },
           size: {
-            value: { min: 1, max: 5 }
+            value: { min: 1, max: 5 },
+            random: true,
+            animation: {
+              enable: true,
+              speed: 2,
+              minimumValue: 0.5,
+              sync: false
+            }
           }
         },
         detectRetina: true
@@ -94,15 +136,17 @@ const AudioPlayer = () => {
     const playAudio = async () => {
       try {
         await audio.play();
+        setIsPlaying(true);
       } catch (error) {
         console.log('Audio autoplay blocked');
+        setIsPlaying(false);
       }
     };
 
-    const timer = setTimeout(playAudio, 2000);
+    // Start playing immediately on page load
+    playAudio();
 
     return () => {
-      clearTimeout(timer);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
     };
@@ -136,7 +180,11 @@ const AudioPlayer = () => {
           className="p-3 bg-slate-800/90 backdrop-blur-sm rounded-full border border-slate-700/50
                      hover:bg-slate-700/90 transition-colors cursor-pointer"
         >
-          <Play className={`w-5 h-5 text-white ${isPlaying ? 'animate-pulse' : ''}`} />
+          {isPlaying ? (
+            <Pause className="w-5 h-5 text-white" />
+          ) : (
+            <Play className="w-5 h-5 text-white" />
+          )}
         </button>
         <button
           onClick={toggleMute}
@@ -194,19 +242,127 @@ const WaveformVisualizer = ({ className = "" }: { className?: string }) => {
   );
 };
 
+const StartingPointModal = ({ onClose, onSelect }: { onClose: () => void; onSelect: (option: string) => void }) => {
+  const startingOptions = [
+    {
+      id: 'layers',
+      title: 'Layers',
+      description: 'Build your track layer by layer with instruments and sounds',
+      icon: Layers
+    },
+    {
+      id: 'vocals',
+      title: 'Vocals',
+      description: 'Start with vocal recordings and build around them',
+      icon: Mic
+    },
+    {
+      id: 'describe',
+      title: 'Describe',
+      description: 'Tell AI what you want and let it create the foundation',
+      icon: FileText
+    },
+    {
+      id: 'remix',
+      title: 'Remix',
+      description: 'Transform existing tracks with AI-powered remixing',
+      icon: Shuffle
+    }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+    >
+      {/* Blurred Background */}
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-lg" />
+
+      {/* Modal Content */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="relative z-10 bg-slate-900/90 backdrop-blur-sm rounded-3xl border border-slate-700/50 p-8 max-w-4xl w-full"
+      >
+        <div className="text-center mb-12">
+          <motion.h2
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-4xl font-bold mb-4 text-white"
+          >
+            Choose Your Starting Point
+          </motion.h2>
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-slate-400 text-lg"
+          >
+            How would you like to begin creating your audio masterpiece?
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {startingOptions.map((option, index) => (
+            <motion.button
+              key={option.id}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
+              onClick={() => onSelect(option.id)}
+              className="group relative p-6 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/30
+                         hover:bg-slate-700/50 hover:border-slate-600/50 transition-all duration-300
+                         hover:scale-105 hover:shadow-2xl cursor-pointer text-left"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="p-3 rounded-xl bg-slate-700 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                  <option.icon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-slate-100 transition-colors">
+                    {option.title}
+                  </h3>
+                  <p className="text-slate-400 group-hover:text-slate-300 transition-colors leading-relaxed">
+                    {option.description}
+                  </p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 export function LandingPage() {
   const { isSignedIn, isLoaded } = useUser();
+  const [showStartingPointModal, setShowStartingPointModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
+  const handleStartingPointSelect = (option: string) => {
+    // Navigate to DAW with the selected starting point
+    window.location.href = `/daw?start=${option}`;
+  };
+
+  const handleCloseModal = () => {
+    setShowStartingPointModal(false);
+  };
+
   useEffect(() => {
     if (!isLoaded) return;
 
     if (isSignedIn) {
-      window.location.href = '/daw';
+      setShowStartingPointModal(true);
       return;
     }
 
@@ -262,7 +418,7 @@ export function LandingPage() {
               {[...Array(5)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="w-4 h-12 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full"
+                  className="w-4 h-12 bg-slate-300 rounded-full"
                   animate={{
                     scaleY: [0.3, 1, 0.3],
                     opacity: [0.5, 1, 0.5]
@@ -281,7 +437,7 @@ export function LandingPage() {
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-4xl font-black mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+            className="text-4xl font-black mb-4 text-white"
           >
             NOEM
           </motion.h1>
@@ -298,11 +454,16 @@ export function LandingPage() {
     );
   }
 
-  if (isSignedIn) {
-    return null;
-  }
-
   return (
+    <>
+      {showStartingPointModal && (
+        <StartingPointModal
+          onClose={handleCloseModal}
+          onSelect={handleStartingPointSelect}
+        />
+      )}
+
+      {!isSignedIn && (
     <div ref={containerRef} className="bg-slate-950 text-white relative">
       <AudioPlayer />
       <ParticlesBackground />
@@ -325,7 +486,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 1 }}
-            className="text-7xl md:text-9xl font-black mb-6 leading-none tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+            className="text-7xl md:text-9xl font-black mb-6 leading-none tracking-tight text-white"
           >
             NOEM
           </motion.h1>
@@ -334,7 +495,7 @@ export function LandingPage() {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: 0.8, duration: 0.8 }}
-            className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-8 rounded-full"
+            className="w-32 h-1 bg-slate-300 mx-auto mb-8 rounded-full"
           />
 
           <motion.p
@@ -479,5 +640,7 @@ export function LandingPage() {
         </div>
       </footer>
     </div>
+      )}
+    </>
   );
 }
