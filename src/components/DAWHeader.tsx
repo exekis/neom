@@ -46,6 +46,8 @@ interface DAWHeaderProps {
   onOpenAssistant: () => void;
   onShowHotkeys: () => void;
   onShowWorkspace: () => void;
+  onOpenProjectModal?: () => void;
+  onExportWAV?: () => void;
 }
 
 export function DAWHeader({
@@ -69,7 +71,9 @@ export function DAWHeader({
   onMasterVolumeChange,
   onOpenAssistant,
   onShowHotkeys,
-  onShowWorkspace
+  onShowWorkspace,
+  onOpenProjectModal,
+  onExportWAV
 }: DAWHeaderProps) {
   const { user } = useUser();
   const [isEditingName, setIsEditingName] = useState(false);
@@ -128,8 +132,14 @@ export function DAWHeader({
               </button>
 
               {showExportMenu && (
-                <div className="absolute top-full left-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-lg z-[100] min-w-[140px]">
-                  <button className="w-full px-3 py-2 text-left text-white hover:bg-slate-700 flex items-center gap-2 text-sm">
+                <div className="absolute top-full left-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-lg z-[9999] min-w-[140px]">
+                  <button
+                    onClick={() => {
+                      onExportWAV?.();
+                      setShowExportMenu(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-white hover:bg-slate-700 flex items-center gap-2 text-sm"
+                  >
                     <Music className="w-4 h-4" />
                     Export WAV
                   </button>
@@ -255,6 +265,16 @@ export function DAWHeader({
           >
             <FolderOpen className="w-4 h-4" />
           </button>
+
+          {onOpenProjectModal && (
+            <button
+              onClick={onOpenProjectModal}
+              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors"
+              title="Project Manager"
+            >
+              <Music className="w-4 h-4" />
+            </button>
+          )}
 
           <button
             onClick={onShowHotkeys}

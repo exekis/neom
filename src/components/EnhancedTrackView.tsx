@@ -2,6 +2,7 @@
 
 import { AudioTrack } from "../types/AudioTrack";
 import { EnhancedTrackRow } from "./EnhancedTrackRow";
+import { WaveformVisualization } from "./WaveformVisualization";
 
 interface TrackState {
   id: string;
@@ -208,33 +209,26 @@ export function EnhancedTrackView({
                   >
                     {/* Track waveform visualization */}
                     <div
-                      className="absolute top-2 bottom-2 rounded border border-slate-600/50"
+                      className="absolute top-2 bottom-2 rounded overflow-hidden"
                       style={{
                         left: `${track.startTime * PIXELS_PER_SECOND}px`,
-                        width: `${track.duration * PIXELS_PER_SECOND}px`,
-                        background: `linear-gradient(90deg, ${track.color}40, ${track.color}20)`,
-                        border: `1px solid ${track.color}60`
+                        width: `${track.duration * PIXELS_PER_SECOND}px`
                       }}
                     >
-                      {/* Mock waveform pattern */}
-                      <div className="h-full flex items-center px-2">
-                        <div className="flex items-center justify-center h-full w-full space-x-px">
-                          {Array.from({ length: Math.floor(track.duration / 2) }, (_, i) => (
-                            <div
-                              key={i}
-                              className="bg-current opacity-60"
-                              style={{
-                                width: '2px',
-                                height: `${20 + Math.sin(i * 0.5) * 10}px`,
-                                color: track.color
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
+                      <WaveformVisualization
+                        audioBuffer={track.audioBuffer}
+                        width={track.duration * PIXELS_PER_SECOND}
+                        height={48}
+                        color={track.color}
+                        duration={track.duration}
+                        startTime={track.startTime}
+                        currentTime={currentTime}
+                        pixelsPerSecond={PIXELS_PER_SECOND}
+                        className="rounded border border-slate-600/50 bg-slate-900/40"
+                      />
 
                       {/* Track name overlay */}
-                      <div className="absolute top-1 left-2 text-xs font-medium text-white/90">
+                      <div className="absolute top-1 left-2 text-xs font-medium text-white/90 bg-black/20 px-1 rounded backdrop-blur-sm">
                         {track.name}
                       </div>
                     </div>

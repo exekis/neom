@@ -8,6 +8,8 @@ interface UseAudioPlayerProps {
 export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [clickPosition, setClickPosition] = useState(0); // Last clicked position
+  const [lastPlayPosition, setLastPlayPosition] = useState(0); // Position when last stopped/paused
   const sourceNodesRef = useRef<AudioBufferSourceNode[]>([]);
   const startTimeRef = useRef(0);
   const pausedAtRef = useRef(0);
@@ -78,7 +80,9 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
 
   const pause = useCallback(() => {
     if (audioContext && isPlaying) {
-      pausedAtRef.current = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
+      const currentPos = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
+      pausedAtRef.current = currentPos;
+      setLastPlayPosition(currentPos);
       stop();
       setIsPlaying(false);
       if (animationFrameRef.current !== null) {
@@ -95,18 +99,47 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     }
     pausedAtRef.current = Math.max(0, time);
     setCurrentTime(time);
+    setClickPosition(time);
     if (wasPlaying) {
       // Resume playback from new position would require re-creating audio nodes
       // For now just update the time position
     }
   }, [isPlaying, stop]);
 
+  // Play from clicked position (spacebar behavior)
+  const playFromClick = useCallback(async (tracks: AudioTrack[]) => {
+    if (clickPosition > 0) {
+      pausedAtRef.current = clickPosition;
+      setCurrentTime(clickPosition);
+    }
+    await play(tracks);
+  }, [clickPosition, play]);
+
+  // Continue from last played position (Enter behavior)
+  const playFromLast = useCallback(async (tracks: AudioTrack[]) => {
+    if (lastPlayPosition > 0) {
+      pausedAtRef.current = lastPlayPosition;
+      setCurrentTime(lastPlayPosition);
+    }
+    await play(tracks);
+  }, [lastPlayPosition, play]);
+
+  // Set click position without seeking
+  const setClickPos = useCallback((time: number) => {
+    setClickPosition(Math.max(0, time));
+  }, []);
+
   return {
     isPlaying,
     currentTime,
+    clickPosition,
+    lastPlayPosition,
     play,
     pause,
     stop,
-    seek
+    seek,
+    playFromClick,
+    playFromLast,
+    setClickPos
   };
 }

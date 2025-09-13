@@ -13,6 +13,9 @@ interface ChatMessage {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  isAction?: boolean;
+  actionType?: string;
+  actionData?: any;
 }
 
 interface ChatSidebarProps {
@@ -29,15 +32,55 @@ export function ChatSidebar({ isOpen, onClose, tracks = [], onAddTrackFromAI }: 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: "Hi! I'm your AI audio assistant. I can help you edit your tracks, add effects, and optimize your audio. What would you like to do?",
+      text: "Hi! I'm your AI audio assistant powered by Gemini. I can help you edit your tracks, add effects, optimize your audio, and even generate new audio content based on your descriptions. What would you like to do?",
       isUser: false,
       timestamp: new Date(),
     }
   ]);
   const [inputText, setInputText] = useState('');
   const [activeTab, setActiveTab] = useState<RightPanelTab>('chat');
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleSendMessage = () => {
+  const generateMockAudioTrack = async (description: string) => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const duration = 30 + Math.random() * 30; // 30-60 seconds
+      const sampleRate = audioContext.sampleRate;
+      const buffer = audioContext.createBuffer(2, sampleRate * duration, sampleRate);
+
+      // Generate simple audio based on description keywords
+      for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < channelData.length; i++) {
+          const time = i / sampleRate;
+          let signal = 0;
+
+          if (description.toLowerCase().includes('drum') || description.toLowerCase().includes('beat')) {
+            // Generate drum-like pattern
+            signal = Math.sin(time * 60 * Math.PI) * Math.exp(-((time % 1) * 10));
+          } else if (description.toLowerCase().includes('bass')) {
+            // Generate bass-like frequency
+            signal = Math.sin(time * 80 * Math.PI) * 0.5;
+          } else if (description.toLowerCase().includes('melody') || description.toLowerCase().includes('piano')) {
+            // Generate melodic content
+            signal = Math.sin(time * 440 * Math.PI) * 0.3 + Math.sin(time * 554 * Math.PI) * 0.2;
+          } else {
+            // Default ambient sound
+            signal = Math.sin(time * 220 * Math.PI) * 0.4 + (Math.random() - 0.5) * 0.1;
+          }
+
+          channelData[i] = signal * (0.8 + Math.random() * 0.2) * Math.exp(-time * 0.1);
+        }
+      }
+
+      return buffer;
+    } catch (error) {
+      console.error('Error generating audio:', error);
+      return null;
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
     const newMessage: ChatMessage = {
@@ -48,26 +91,152 @@ export function ChatSidebar({ isOpen, onClose, tracks = [], onAddTrackFromAI }: 
     };
 
     setMessages(prev => [...prev, newMessage]);
+    const userInput = inputText;
     setInputText('');
+    setIsGenerating(true);
 
-    // Simulate AI processing time
-    setTimeout(() => {
-      let responseText = "I understand you want to work with your audio. ";
+    try {
+      // Check if user is asking for audio generation
+      const isAudioGenerationRequest = userInput.toLowerCase().includes('create') ||
+                                     userInput.toLowerCase().includes('generate') ||
+                                     userInput.toLowerCase().includes('make') ||
+                                     userInput.toLowerCase().includes('add') &&
+                                     (userInput.toLowerCase().includes('track') ||
+                                      userInput.toLowerCase().includes('audio') ||
+                                      userInput.toLowerCase().includes('sound') ||
+                                      userInput.toLowerCase().includes('music') ||
+                                      userInput.toLowerCase().includes('beat') ||
+                                      userInput.toLowerCase().includes('melody') ||
+                                      userInput.toLowerCase().includes('bass') ||
+                                      userInput.toLowerCase().includes('drum'));
 
-      if (tracks.length === 0) {
-        responseText += "Once you upload some tracks, I can help you with effects like fade, gain adjustment, reverb, normalization, and adding loops. What specific audio editing do you have in mind?";
+      // Call Gemini API
+      const response = await fetch('/api/gemini/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userInput,
+          tracks: tracks.map(track => ({
+            name: track.name,
+            duration: track.duration
+          }))
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        let aiResponseText = data.message;
+
+        // If this is an audio generation request, offer to create a track
+        if (isAudioGenerationRequest && onAddTrackFromAI) {
+          aiResponseText += "\n\n🎵 I can create a demo audio track for you based on your description! Would you like me to generate it and add it to your timeline?";
+
+          // Add action buttons in the response
+          const aiResponse: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            text: aiResponseText,
+            isUser: false,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, aiResponse]);
+
+          // Add the generate button message
+          const generateButtonMessage: ChatMessage = {
+            id: (Date.now() + 2).toString(),
+            text: `Generate "${userInput.length > 50 ? userInput.substring(0, 50) + '...' : userInput}"`,
+            isUser: false,
+            timestamp: new Date(),
+            isAction: true,
+            actionType: 'generate',
+            actionData: { description: userInput }
+          } as ChatMessage & { isAction: boolean; actionType: string; actionData: any };
+
+          setMessages(prev => [...prev, generateButtonMessage]);
+        } else {
+          const aiResponse: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            text: aiResponseText,
+            isUser: false,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        }
       } else {
-        responseText += `I can see you have ${tracks.length} track${tracks.length !== 1 ? 's' : ''} loaded. I can help you with:\n\n• Fade in/out effects\n• Volume adjustments\n• Adding reverb or echo\n• Normalizing audio levels\n• Adding background loops\n\nWhat would you like to do with your audio?`;
+        const errorResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: data.message || "I apologize, but I encountered an error while processing your request. Please try again.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorResponse]);
       }
-
-      const aiResponse: ChatMessage = {
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: responseText,
+        text: "I'm having trouble connecting right now. Please try again in a moment.",
         isUser: false,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateAudio = async (description: string) => {
+    if (!onAddTrackFromAI) return;
+
+    setIsGenerating(true);
+
+    try {
+      const processingMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: "🎵 Generating audio track... This might take a moment.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, processingMessage]);
+
+      // Generate mock audio based on description
+      const audioBuffer = await generateMockAudioTrack(description);
+
+      if (audioBuffer) {
+        // Create a mock audio URL (in a real implementation, this would be from an audio generation service)
+        const audioUrl = URL.createObjectURL(new Blob());
+
+        // Add track to DAW
+        onAddTrackFromAI({
+          name: `AI Generated - ${description.length > 30 ? description.substring(0, 30) + '...' : description}`,
+          audioBuffer,
+          audioUrl
+        });
+
+        const successMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: "✅ Successfully generated and added the audio track to your timeline! You can now edit, move, and process it like any other track.",
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, successMessage]);
+      } else {
+        throw new Error('Failed to generate audio');
+      }
+    } catch (error) {
+      console.error('Audio generation error:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: "❌ Sorry, I encountered an error while generating the audio track. Please try again with a different description.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -119,10 +288,22 @@ export function ChatSidebar({ isOpen, onClose, tracks = [], onAddTrackFromAI }: 
                   className={`max-w-[80%] p-3 rounded-2xl ${
                     message.isUser
                       ? 'bg-purple-600 text-white'
+                      : message.isAction
+                      ? 'bg-green-600/20 border border-green-500/30'
                       : 'bg-slate-800 text-slate-200'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-line">{message.text}</p>
+                  {message.isAction && message.actionType === 'generate' ? (
+                    <button
+                      onClick={() => handleGenerateAudio(message.actionData.description)}
+                      disabled={isGenerating}
+                      className="w-full p-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      {isGenerating ? '🎵 Generating...' : `🎵 ${message.text}`}
+                    </button>
+                  ) : (
+                    <p className="text-sm whitespace-pre-line">{message.text}</p>
+                  )}
                   <p className={`text-xs mt-1 opacity-70 ${
                     message.isUser ? 'text-purple-200' : 'text-slate-400'
                   }`}>
@@ -145,10 +326,10 @@ export function ChatSidebar({ isOpen, onClose, tracks = [], onAddTrackFromAI }: 
               />
               <button
                 onClick={handleSendMessage}
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || isGenerating}
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
               >
-                Send
+                {isGenerating ? 'Thinking...' : 'Send'}
               </button>
             </div>
           </div>
