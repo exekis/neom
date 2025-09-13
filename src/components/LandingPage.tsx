@@ -350,8 +350,8 @@ export function LandingPage() {
   const ctaRef = useRef<HTMLDivElement>(null);
 
   const handleStartingPointSelect = (option: string) => {
-    // Navigate to DAW with the selected starting point
-    window.location.href = `/daw?start=${option}`;
+    // Navigate to the specific workflow page
+    window.location.href = `/workflows/${option}`;
   };
 
   const handleCloseModal = () => {
