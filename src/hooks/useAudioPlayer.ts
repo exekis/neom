@@ -11,12 +11,12 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
   const sourceNodesRef = useRef<AudioBufferSourceNode[]>([]);
   const startTimeRef = useRef(0);
   const pausedAtRef = useRef(0);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | null>(null);
 
   const updateCurrentTime = useCallback(() => {
     if (audioContext && isPlaying) {
       const elapsed = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
-      setCurrentTime(elapsed);
+      setCurrentTime(Math.max(0, elapsed));
       animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
     }
   }, [audioContext, isPlaying]);
@@ -34,8 +34,9 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     setIsPlaying(false);
     setCurrentTime(0);
     pausedAtRef.current = 0;
-    if (animationFrameRef.current) {
+    if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
   }, []);
 
@@ -80,8 +81,9 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
       pausedAtRef.current = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
       stop();
       setIsPlaying(false);
-      if (animationFrameRef.current) {
+      if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
     }
   }, [audioContext, isPlaying, stop]);

@@ -1,5 +1,7 @@
 "use client";
 
+import { Play, Pause, Square } from 'lucide-react';
+
 interface AudioControlsProps {
   isPlaying: boolean;
   currentTime: number;
@@ -33,14 +35,14 @@ export function AudioControls({
                 : 'bg-purple-600 hover:bg-purple-700'
             }`}
           >
-            {isPlaying ? '⏸️' : '▶️'}
+{isPlaying ? <Pause className="w-6 h-6" fill="currentColor" /> : <Play className="w-6 h-6" fill="currentColor" />}
           </button>
 
           <button
             onClick={onStop}
             className="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white transition-all duration-200 shadow-lg cursor-pointer"
           >
-            ⏹️
+<Square className="w-5 h-5" fill="currentColor" />
           </button>
         </div>
 

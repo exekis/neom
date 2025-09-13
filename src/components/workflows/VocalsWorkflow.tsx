@@ -9,9 +9,10 @@ import WaveformModal from '@/components/WaveformModal';
 
 interface VocalsWorkflowProps {
   onBack: () => void;
+  onApplyToDAW?: (args: { audioBuffer: AudioBuffer; audioUrl: string; name: string }) => void;
 }
 
-export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
+export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -151,10 +152,18 @@ export function VocalsWorkflow({ onBack }: VocalsWorkflowProps) {
 
   const handleOpenInDAW = () => {
     if (audioUrl && audioBuffer) {
+      const name = 'Generated vocal track';
+      if (onApplyToDAW) {
+        onApplyToDAW({ audioBuffer, audioUrl, name });
+        setShowWaveformModal(false);
+        return;
+      }
       sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', 'Generated vocal track');
+      sessionStorage.setItem('daw-audio-name', name);
     }
-    window.location.href = '/daw';
+    if (!onApplyToDAW) {
+      window.location.href = '/daw';
+    }
   };
 
   const formatTime = (seconds: number) => {

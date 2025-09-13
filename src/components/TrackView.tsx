@@ -2,6 +2,8 @@
 
 import { AudioTrack } from "../types/AudioTrack";
 import { TrackRow } from "./TrackRow";
+import { TimelineMarkers } from "./TimelineMarkers";
+import { PlaybackCursor } from "./PlaybackCursor";
 
 interface TrackViewProps {
   tracks: AudioTrack[];
@@ -12,6 +14,8 @@ interface TrackViewProps {
   currentTime: number;
   isPlaying: boolean;
 }
+
+const PIXELS_PER_SECOND = 60;
 
 export function TrackView({
   tracks,
@@ -40,7 +44,15 @@ export function TrackView({
         </h2>
       </div>
       
-      <div className="divide-y divide-slate-700/30">
+      {/* Single unified timeline at the top */}
+      <div className="flex">
+        <div className="w-40 bg-slate-800/30 border-r border-slate-700/30 h-8"></div>
+        <div className="flex-1 px-3 pt-3 pb-2 relative h-8">
+          <TimelineMarkers pixelsPerSecond={PIXELS_PER_SECOND} />
+        </div>
+      </div>
+      
+      <div className="divide-y divide-slate-700/30 relative">
         {tracks.map((track, index) => (
           <TrackRow
             key={track.id}
@@ -54,6 +66,15 @@ export function TrackView({
             isPlaying={isPlaying}
           />
         ))}
+        
+        {/* Single playback cursor spanning all tracks */}
+        <div className="absolute top-0 bottom-0 pointer-events-none" style={{ left: '160px', right: '0' }}>
+          <PlaybackCursor
+            currentTime={currentTime}
+            pixelsPerSecond={PIXELS_PER_SECOND}
+            isVisible={isPlaying}
+          />
+        </div>
       </div>
     </div>
   );

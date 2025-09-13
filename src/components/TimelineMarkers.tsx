@@ -10,7 +10,7 @@ export function TimelineMarkers({
   markerCount = 21
 }: TimelineMarkersProps) {
   return (
-    <div className="absolute top-0 left-0 right-0 h-6 border-b border-slate-700/30">
+    <div className="relative h-6 border-b border-slate-700/30">
       {Array.from({ length: markerCount }).map((_, i) => (
         <div
           key={i}

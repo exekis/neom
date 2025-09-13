@@ -35,6 +35,50 @@ export function useAudioGeneration() {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Calls external AI router to select op + run it,
+  // then sets audioUrl to the produced file URL.
+  const aiRouteRun = useCallback(async (args: { projectId: string; originalPath: string; text: string }) => {
+    const API = 'http://20.161.72.50/api';
+    try {
+      setState(prev => ({ ...prev, isGenerating: true, progress: 5, message: 'Contacting AI router...' }));
+
+      const res = await fetch(`${API}/ai/route_and_run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args)
+      });
+
+      if (!res.ok) {
+        throw new Error(`AI route failed: ${res.status}`);
+      }
+
+      // Increment progress a bit while parsing
+      setState(prev => ({ ...prev, progress: 40, message: 'Routing successful. Executing operation...' }));
+
+      const data = await res.json();
+      // data.modifiedUrl is a "/files/..." path. Prefix with host
+      const filesBase = 'http://20.161.72.50';
+      const absoluteAudioUrl = `${filesBase}${data.modifiedUrl}`;
+
+      setState(prev => ({ ...prev, progress: 100, message: 'Generation complete!' }));
+
+      // Slight delay to allow the user to see completion
+      setTimeout(() => {
+        setState(prev => ({ ...prev, isGenerating: false, audioUrl: absoluteAudioUrl }));
+      }, 500);
+
+      return data;
+    } catch (err) {
+      setState(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: err instanceof Error ? err.message : 'AI route failed',
+        message: 'Generation failed'
+      }));
+      throw err;
+    }
+  }, []);
+
   const generateAudio = useCallback(async (params: GenerationParams) => {
     setState(prev => ({
       ...prev,
@@ -139,6 +183,7 @@ export function useAudioGeneration() {
   return {
     ...state,
     generateAudio,
+    aiRouteRun,
     reset
   };
 }

@@ -9,9 +9,10 @@ import WaveformModal from '@/components/WaveformModal';
 
 interface RemixWorkflowProps {
   onBack: () => void;
+  onApplyToDAW?: (args: { audioBuffer: AudioBuffer; audioUrl: string; name: string }) => void;
 }
 
-export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
+export function RemixWorkflow({ onBack, onApplyToDAW }: RemixWorkflowProps) {
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
@@ -89,10 +90,18 @@ export function RemixWorkflow({ onBack }: RemixWorkflowProps) {
 
   const handleOpenInDAW = () => {
     if (audioUrl && audioBuffer) {
+      const name = 'Generated remix track';
+      if (onApplyToDAW) {
+        onApplyToDAW({ audioBuffer, audioUrl, name });
+        setShowWaveformModal(false);
+        return;
+      }
       sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', 'Generated remix track');
+      sessionStorage.setItem('daw-audio-name', name);
     }
-    window.location.href = '/daw';
+    if (!onApplyToDAW) {
+      window.location.href = '/daw';
+    }
   };
 
   return (
