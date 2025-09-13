@@ -346,6 +346,12 @@ type SignInBtnProps = { children: React.ReactNode; mode?: 'modal' | 'redirect'; 
 const SignInButtonDyn: React.ComponentType<SignInBtnProps> = hasClerk
   ? NextDynamic(() => import('@clerk/nextjs').then(m => m.SignInButton), { ssr: false })
   : function FallbackSignIn({ children }: { children: React.ReactNode }) { return <Link href="/daw">{children}</Link>; };
+const SignedInDyn: React.ComponentType<{ children: React.ReactNode }> = hasClerk
+  ? NextDynamic(() => import('@clerk/nextjs').then(m => m.SignedIn), { ssr: false })
+  : () => null;
+const SignedOutDyn: React.ComponentType<{ children: React.ReactNode }> = hasClerk
+  ? NextDynamic(() => import('@clerk/nextjs').then(m => m.SignedOut), { ssr: false })
+  : ({ children }) => <>{children}</>;
 
 export function LandingPage() {
   const [showStartingPointModal, setShowStartingPointModal] = useState(false);
@@ -569,11 +575,21 @@ export function LandingPage() {
             Join thousands of creators using AI to enhance their audio production workflow
           </p>
 
-          <SignInButtonDyn mode="modal" afterSignInUrl="/daw" afterSignUpUrl="/daw">
-            <ClerkButtonChild>
-              Enter Studio
-            </ClerkButtonChild>
-          </SignInButtonDyn>
+          {/* If user is signed in, go straight to the studio. Otherwise open Clerk modal. */}
+          <SignedInDyn>
+            <Link href="/daw">
+              <ClerkButtonChild>
+                Enter Studio
+              </ClerkButtonChild>
+            </Link>
+          </SignedInDyn>
+          <SignedOutDyn>
+            <SignInButtonDyn mode="modal" afterSignInUrl="/daw" afterSignUpUrl="/daw">
+              <ClerkButtonChild>
+                Enter Studio
+              </ClerkButtonChild>
+            </SignInButtonDyn>
+          </SignedOutDyn>
         </div>
       </section>
 
