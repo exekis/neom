@@ -1,0 +1,1558 @@
+[
+  {
+    "id": "ambiguity_686210",
+    "file": "/home/neomuser/noem/loops/ambiguity_686210.wav",
+    "tags": [
+      "90bpm",
+      "bass",
+      "electric-bass",
+      "electric-guitar",
+      "Fretless",
+      "fusion",
+      "guitar",
+      "jazz",
+      "loop",
+      "major",
+      "minor",
+      "riff",
+      "vamp"
+    ],
+    "bpm": 90,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 686210,
+      "name": "Ambiguity",
+      "user": "itinerantmonk108",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "acoustic_jazz_loop_wav_548171",
+    "file": "/home/neomuser/noem/loops/acoustic_jazz_loop_wav_548171.wav",
+    "tags": [
+      "acoustic",
+      "backing",
+      "guitar",
+      "jazz",
+      "loop",
+      "music"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 548171,
+      "name": "Acoustic Jazz Loop.wav",
+      "user": "BaDoink",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "100_plexi_50w_lespaul_chords_670617",
+    "file": "/home/neomuser/noem/loops/100_plexi_50w_lespaul_chords_670617.wav",
+    "tags": [
+      "100bpm",
+      "chords",
+      "D",
+      "Gibson",
+      "guitar",
+      "jazz",
+      "Lespaul",
+      "lo-fi",
+      "loop",
+      "minor",
+      "noise",
+      "vinyl"
+    ],
+    "bpm": 100,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 670617,
+      "name": "100.plexi.50w.lespaul.chords",
+      "user": "tripjazz",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "jazz_guitar_loop_wav_485389",
+    "file": "/home/neomuser/noem/loops/jazz_guitar_loop_wav_485389.wav",
+    "tags": [
+      "bass",
+      "guitar",
+      "jazzy",
+      "loop",
+      "music"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 485389,
+      "name": "Jazz Guitar Loop.wav",
+      "user": "se2001",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "7_string_clean_guitar_arp_loopable_792876",
+    "file": "/home/neomuser/noem/loops/7_string_clean_guitar_arp_loopable_792876.wav",
+    "tags": [
+      "6-string",
+      "7-string",
+      "arp",
+      "arpeggio",
+      "arps",
+      "chill-guitar",
+      "chord",
+      "clean-guitar",
+      "electric-clean-guitar",
+      "guitar",
+      "guitar-line",
+      "jazz",
+      "loop",
+      "loopable",
+      "loopable-guitar",
+      "pensive-guitar"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 792876,
+      "name": "7 String Clean Guitar Arp - Loopable",
+      "user": "Geoff-Bremner-Audio",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "guitar_mute_pluck_riff_122bpm_811473",
+    "file": "/home/neomuser/noem/loops/guitar_mute_pluck_riff_122bpm_811473.wav",
+    "tags": [
+      "122bpm",
+      "acoustic",
+      "chill",
+      "chord",
+      "clean",
+      "electric-guitar",
+      "funk",
+      "funky",
+      "groovy",
+      "guitar",
+      "guitarloop",
+      "indie",
+      "jazz",
+      "jazzy",
+      "loop",
+      "loopable",
+      "mellow",
+      "melody",
+      "music",
+      "musica",
+      "mute",
+      "muted",
+      "notes",
+      "pluck",
+      "plucked",
+      "rhythm",
+      "riff",
+      "rock"
+    ],
+    "bpm": 122,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 811473,
+      "name": "guitar mute pluck riff 122bpm",
+      "user": "CVLTIV8R",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bgm_blues_guitar_loop_721148",
+    "file": "/home/neomuser/noem/loops/bgm_blues_guitar_loop_721148.wav",
+    "tags": [
+      "ambient",
+      "background",
+      "bgm",
+      "blues",
+      "cleaner",
+      "free",
+      "funky",
+      "game",
+      "groovy",
+      "guitar",
+      "happy",
+      "jazz",
+      "loop",
+      "music",
+      "ost"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 721148,
+      "name": "Bgm Blues Guitar Loop",
+      "user": "Ncone",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "rubber_band_140_wav_568773",
+    "file": "/home/neomuser/noem/loops/rubber_band_140_wav_568773.wav",
+    "tags": [
+      "140",
+      "Backing",
+      "Bass",
+      "BPM",
+      "Drums",
+      "Guitar",
+      "Jazz",
+      "Loop",
+      "Music",
+      "Synth"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 568773,
+      "name": "Rubber Band 140.wav",
+      "user": "BaDoink",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "throw_some_spit_on_this_loop_wav_531869",
+    "file": "/home/neomuser/noem/loops/throw_some_spit_on_this_loop_wav_531869.wav",
+    "tags": [
+      "bass",
+      "beats",
+      "bpm",
+      "drums",
+      "dubstep",
+      "groove",
+      "guitar",
+      "hip",
+      "hop",
+      "jazz",
+      "Loop",
+      "music",
+      "piano",
+      "pop",
+      "Rap",
+      "rock",
+      "synthesizer"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 531869,
+      "name": "Throw Some Spit on This LOOP.wav",
+      "user": "BaDoink",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "rock_pattern_key_of_e_120_bpm_c_wav_545900",
+    "file": "/home/neomuser/noem/loops/rock_pattern_key_of_e_120_bpm_c_wav_545900.wav",
+    "tags": [
+      "Backing",
+      "Bass",
+      "Beat",
+      "Blues",
+      "BPM",
+      "Country",
+      "Drum",
+      "Drums",
+      "Guitar",
+      "Jam",
+      "Jazz",
+      "Loop",
+      "Rhythm",
+      "Rock"
+    ],
+    "bpm": 120,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 545900,
+      "name": "Rock Pattern Key of E 120 BPM C.wav",
+      "user": "BaDoink",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "swing_beat_wav_321789",
+    "file": "/home/neomuser/noem/loops/swing_beat_wav_321789.wav",
+    "tags": [
+      "140",
+      "95bpm",
+      "bass",
+      "beat",
+      "dance",
+      "drum",
+      "groovy",
+      "hard",
+      "loop",
+      "swing-beat",
+      "techno"
+    ],
+    "bpm": 95,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 321789,
+      "name": "swing beat.wav",
+      "user": "klavo1985",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "drumloop_wey_4_bar_90_bpm_no_swing_240099",
+    "file": "/home/neomuser/noem/loops/drumloop_wey_4_bar_90_bpm_no_swing_240099.wav",
+    "tags": [
+      "100-bpm",
+      "beat",
+      "big-beat",
+      "bigbeat",
+      "break",
+      "breakbeat",
+      "drum",
+      "drum-loop",
+      "drumloop",
+      "drums",
+      "funky",
+      "groovy",
+      "hip-hop",
+      "hiphop",
+      "jungle",
+      "loop",
+      "rap",
+      "rhythm"
+    ],
+    "bpm": 90,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 240099,
+      "name": "Drumloop 'Wey' - 4 bar - 90 BPM (no swing)",
+      "user": "Bronxio",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "swing_120_bpm_mp3_640922",
+    "file": "/home/neomuser/noem/loops/swing_120_bpm_mp3_640922.wav",
+    "tags": [
+      "120-bpm-drums",
+      "beats",
+      "copyright-free-drums",
+      "copyright-free-music",
+      "drum",
+      "drum-beats",
+      "drum-loop",
+      "drums",
+      "drums-loop",
+      "drums-mix",
+      "drums-music",
+      "loop"
+    ],
+    "bpm": 120,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 640922,
+      "name": "Swing ( 120 BPM ).mp3",
+      "user": "anhat_studios",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "swinging_brass_wav_580851",
+    "file": "/home/neomuser/noem/loops/swinging_brass_wav_580851.wav",
+    "tags": [
+      "brass",
+      "Happy",
+      "instrumental",
+      "swinging"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 580851,
+      "name": "Swinging Brass.wav",
+      "user": "Sandra.th",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "airport_lounge_651533",
+    "file": "/home/neomuser/noem/loops/airport_lounge_651533.wav",
+    "tags": [
+      "background",
+      "bass",
+      "beat",
+      "cartoon",
+      "drum",
+      "game",
+      "groove",
+      "happy",
+      "loop",
+      "lounge",
+      "menu",
+      "music",
+      "swing",
+      "synth"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 651533,
+      "name": "Airport Lounge",
+      "user": "code_box",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "drum_beat_loop_2_517674",
+    "file": "/home/neomuser/noem/loops/drum_beat_loop_2_517674.wav",
+    "tags": [
+      "bass",
+      "beat",
+      "clap",
+      "drum",
+      "kick",
+      "loop",
+      "medium",
+      "song",
+      "swing"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 517674,
+      "name": "Drum Beat Loop #2",
+      "user": "danlucaz",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "drumloop_classic_breakbeat_8_swinging_ride_239564",
+    "file": "/home/neomuser/noem/loops/drumloop_classic_breakbeat_8_swinging_ride_239564.wav",
+    "tags": [
+      "90s",
+      "beat",
+      "bigbeat",
+      "break",
+      "breakbeat",
+      "classic",
+      "drum",
+      "drum-loop",
+      "drums",
+      "funky",
+      "golden-era",
+      "hip-hop",
+      "loop",
+      "old-school",
+      "ride",
+      "sample",
+      "swing"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 239564,
+      "name": "Drumloop - Classic Breakbeat 8 (swinging ride)",
+      "user": "Bronxio",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "drum_machine_loop_94bpm_519225",
+    "file": "/home/neomuser/noem/loops/drum_machine_loop_94bpm_519225.wav",
+    "tags": [
+      "808",
+      "beat",
+      "drum",
+      "drum-loop",
+      "drums",
+      "groove",
+      "loop",
+      "machine",
+      "percs",
+      "percussion",
+      "percussion-loop",
+      "quantized",
+      "rhythm",
+      "ride",
+      "swing"
+    ],
+    "bpm": 94,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 519225,
+      "name": "Drum Machine loop 94bpm",
+      "user": "Augurer_Extraordinaire",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "tough_fight_395313",
+    "file": "/home/neomuser/noem/loops/tough_fight_395313.wav",
+    "tags": [
+      "16-bit",
+      "Beats",
+      "Chiptune",
+      "Drum",
+      "Electronic",
+      "loop",
+      "raw"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 395313,
+      "name": "Tough fight",
+      "user": "Hoshi_Hana",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "drum_beat_loop_1_500284",
+    "file": "/home/neomuser/noem/loops/drum_beat_loop_1_500284.wav",
+    "tags": [
+      "beat",
+      "clap",
+      "drum",
+      "fast",
+      "intense",
+      "kick",
+      "loop",
+      "rap",
+      "song",
+      "swing"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 500284,
+      "name": "Drum Beat Loop #1",
+      "user": "danlucaz",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "double_bass_walking_613387",
+    "file": "/home/neomuser/noem/loops/double_bass_walking_613387.wav",
+    "tags": [
+      "bass",
+      "club",
+      "dance",
+      "doublebass",
+      "drumbass",
+      "dub",
+      "dub-step",
+      "effect",
+      "electro",
+      "electronic",
+      "fx",
+      "glitch-hop",
+      "house",
+      "loop",
+      "rave",
+      "sub",
+      "techno",
+      "trance"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 613387,
+      "name": "Double bass walking",
+      "user": "elzozo",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "street_walking_mp3_564897",
+    "file": "/home/neomuser/noem/loops/street_walking_mp3_564897.wav",
+    "tags": [
+      "bass",
+      "drum",
+      "loop"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 564897,
+      "name": "Street walking.mp3",
+      "user": "raquelgalvao",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "trotting_along_614726",
+    "file": "/home/neomuser/noem/loops/trotting_along_614726.wav",
+    "tags": [
+      "bass",
+      "drum",
+      "loop",
+      "marimba",
+      "motif",
+      "music",
+      "road",
+      "seven",
+      "shaker",
+      "stumble",
+      "stumbling",
+      "trott",
+      "trotting",
+      "walking"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 614726,
+      "name": "Trotting Along",
+      "user": "code_box",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "giant_walking_fast_wav_458051",
+    "file": "/home/neomuser/noem/loops/giant_walking_fast_wav_458051.wav",
+    "tags": [
+      "bass",
+      "boom",
+      "deep",
+      "footsteps",
+      "giant",
+      "low",
+      "low-rumble",
+      "rumble",
+      "running",
+      "thud",
+      "thump"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 458051,
+      "name": "Giant Walking Fast.wav",
+      "user": "facklere",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "minimalist_monkey_521607",
+    "file": "/home/neomuser/noem/loops/minimalist_monkey_521607.wav",
+    "tags": [
+      "bass",
+      "conga",
+      "double-bass",
+      "fragment",
+      "groovy",
+      "jungle",
+      "loop",
+      "marimba",
+      "minimalist",
+      "monkey",
+      "music",
+      "percussion",
+      "short",
+      "simple"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 521607,
+      "name": "Minimalist Monkey",
+      "user": "code_box",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "nothing_is_happening_520853",
+    "file": "/home/neomuser/noem/loops/nothing_is_happening_520853.wav",
+    "tags": [
+      "bass",
+      "drum",
+      "filler",
+      "fragment",
+      "keys",
+      "motif",
+      "music",
+      "neutral",
+      "nothing",
+      "piano",
+      "simple",
+      "walking"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 520853,
+      "name": "Nothing is Happening",
+      "user": "code_box",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "giant_walking_wav_458042",
+    "file": "/home/neomuser/noem/loops/giant_walking_wav_458042.wav",
+    "tags": [
+      "bass",
+      "boom",
+      "deep",
+      "footsteps",
+      "giant",
+      "low",
+      "low-rumble",
+      "rumble",
+      "thud",
+      "thump"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 458042,
+      "name": "Giant Walking.wav",
+      "user": "facklere",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "walk_the_walk_loop_wav_531867",
+    "file": "/home/neomuser/noem/loops/walk_the_walk_loop_wav_531867.wav",
+    "tags": [
+      "bass",
+      "beats",
+      "bpm",
+      "drums",
+      "dubstep",
+      "groove",
+      "guitar",
+      "Loop",
+      "music",
+      "pop",
+      "rock",
+      "synthesizer"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 531867,
+      "name": "Walk the Walk Loop.wav",
+      "user": "BaDoink",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bass_walk_down_fill_wav_799359",
+    "file": "/home/neomuser/noem/loops/bass_walk_down_fill_wav_799359.wav",
+    "tags": [
+      "bass",
+      "bassline",
+      "basslines",
+      "blues",
+      "chords",
+      "chuny",
+      "electric",
+      "electricbass",
+      "funk",
+      "fuzz",
+      "harmonic",
+      "harmonics",
+      "low",
+      "lowend",
+      "note",
+      "notes",
+      "pick",
+      "pluck",
+      "riff",
+      "riffs",
+      "rock",
+      "slap",
+      "slide",
+      "slides"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 799359,
+      "name": "bass walk down fill.wav",
+      "user": "CVLTIV8R",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "jazzy_piano_loop_610745",
+    "file": "/home/neomuser/noem/loops/jazzy_piano_loop_610745.wav",
+    "tags": [
+      "cute",
+      "soundtrack",
+      "video-game"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 610745,
+      "name": "Jazzy piano loop",
+      "user": "kbrecordzz",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "smooth_electric_piano_loop_123bpm_663949",
+    "file": "/home/neomuser/noem/loops/smooth_electric_piano_loop_123bpm_663949.wav",
+    "tags": [
+      "Delay",
+      "Electric",
+      "Groovy",
+      "House",
+      "Jazzy",
+      "Loop",
+      "Music",
+      "Piano",
+      "Reverb",
+      "Rhodes",
+      "Smooth",
+      "Vibe"
+    ],
+    "bpm": 123,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 663949,
+      "name": "Smooth Electric Piano Loop 123BPM",
+      "user": "Orboram",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "lounging_smooth_keys_wav_681097",
+    "file": "/home/neomuser/noem/loops/lounging_smooth_keys_wav_681097.wav",
+    "tags": [
+      "Chill",
+      "Cinematic",
+      "Electric",
+      "Funk",
+      "Gospel",
+      "Jazz",
+      "Keys",
+      "Lounge",
+      "Piano",
+      "Relax",
+      "RnB",
+      "Soul"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 681097,
+      "name": "Lounging - Smooth Keys.wav",
+      "user": "deleted_user_14795591",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "hakren_jazzy_ambient_piano_mansion_414557_erokia_remix_1_2_426751",
+    "file": "/home/neomuser/noem/loops/hakren_jazzy_ambient_piano_mansion_414557_erokia_remix_1_2_426751.wav",
+    "tags": [
+      "Ambiance",
+      "Ambient",
+      "Atmosphere",
+      "Music",
+      "Piano",
+      "Soundtrack"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 426751,
+      "name": "Hakren - Jazzy Ambient Piano Mansion [414557]-[Erokia Remix 1_2]",
+      "user": "Erokia",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "hakren_jazzy_ambient_piano_mansion_414557_erokia_remix_2_ambient_piano_loop_64_ambiance_140_bpm_415913",
+    "file": "/home/neomuser/noem/loops/hakren_jazzy_ambient_piano_mansion_414557_erokia_remix_2_ambient_piano_loop_64_ambiance_140_bpm_415913.wav",
+    "tags": [
+      "Ambiance",
+      "Ambient",
+      "Atmosphere",
+      "Music",
+      "Piano",
+      "Soundtrack"
+    ],
+    "bpm": 140,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 415913,
+      "name": "Hakren - Jazzy Ambient Piano Mansion [414557]-[Erokia Remix 2] - Ambient Piano Loop 64 (Ambiance)-(140 BPM",
+      "user": "Erokia",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "webandbotmadeloop_wav_409940",
+    "file": "/home/neomuser/noem/loops/webandbotmadeloop_wav_409940.wav",
+    "tags": [
+      "bass",
+      "beat",
+      "chord",
+      "drumbot",
+      "drums",
+      "jazz",
+      "jazzy",
+      "loop",
+      "onlinesequencer",
+      "piano",
+      "soft"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 409940,
+      "name": "WebAndBotMadeLoop.wav",
+      "user": "gis_sweden",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "organ_c4_wav_31101",
+    "file": "/home/neomuser/noem/loops/organ_c4_wav_31101.wav",
+    "tags": [
+      "ambient",
+      "jaz",
+      "loop",
+      "new-age",
+      "sad",
+      "synth"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 31101,
+      "name": "Organ_C4.wav",
+      "user": "hello_flowers",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "lofi_loop_3_506595",
+    "file": "/home/neomuser/noem/loops/lofi_loop_3_506595.wav",
+    "tags": [
+      "ambient",
+      "drums",
+      "jazz",
+      "jazzy",
+      "lo-fi",
+      "LoFi",
+      "loop",
+      "low-fidelity",
+      "piano",
+      "reverb"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 506595,
+      "name": "LoFi Loop 3",
+      "user": "deleted_user_11009121",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "5_4_jazzy_fs_wav_576009",
+    "file": "/home/neomuser/noem/loops/5_4_jazzy_fs_wav_576009.wav",
+    "tags": [
+      "108",
+      "5-4",
+      "Bass",
+      "BPM",
+      "Drums",
+      "Jazz",
+      "Loop",
+      "music",
+      "Odd",
+      "Piano",
+      "Sax",
+      "Timing"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 576009,
+      "name": "5-4 Jazzy Fs.wav",
+      "user": "BaDoink",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "lofi_drum_loop_70_bpm_wav_629140",
+    "file": "/home/neomuser/noem/loops/lofi_drum_loop_70_bpm_wav_629140.wav",
+    "tags": [
+      "76",
+      "bap",
+      "boom",
+      "BPM",
+      "chill",
+      "drum",
+      "Drum",
+      "drums",
+      "Drums",
+      "dusty",
+      "hiphop",
+      "lofi",
+      "Lo-fi",
+      "Lofi",
+      "Loop",
+      "loops",
+      "Loops",
+      "music",
+      "Music",
+      "old",
+      "oldschool",
+      "pack",
+      "sample",
+      "samples",
+      "school",
+      "vinyl"
+    ],
+    "bpm": 70,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 629140,
+      "name": "Lofi Drum Loop 70 BPM.wav",
+      "user": "holizna",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "dusty_lofi_melody_loop_95_bpm_wav_629151",
+    "file": "/home/neomuser/noem/loops/dusty_lofi_melody_loop_95_bpm_wav_629151.wav",
+    "tags": [
+      "95",
+      "beat",
+      "beats",
+      "bpm",
+      "BPM",
+      "chill",
+      "Chill",
+      "Dusty",
+      "hiphop",
+      "lo-fi",
+      "lofi",
+      "Lo-fi",
+      "Lofi",
+      "loop",
+      "loops",
+      "melody",
+      "music",
+      "out",
+      "pack",
+      "relax",
+      "sample",
+      "samples",
+      "sound",
+      "vinyl"
+    ],
+    "bpm": 95,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 629151,
+      "name": "Dusty Lofi Melody Loop 95 BPM.wav",
+      "user": "holizna",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "flute_beat_by_cvltiv8r_93bpm_9_wav_788192",
+    "file": "/home/neomuser/noem/loops/flute_beat_by_cvltiv8r_93bpm_9_wav_788192.wav",
+    "tags": [
+      "Beat",
+      "chill",
+      "drumloop",
+      "Flute",
+      "Hip",
+      "hiphop",
+      "hop",
+      "jazz",
+      "lofi",
+      "loop",
+      "native",
+      "pretty",
+      "trippy"
+    ],
+    "bpm": 93,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 788192,
+      "name": "Flute Beat by CVLTIV8R 93bpm 9.wav",
+      "user": "CVLTIV8R",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "lofi_organ_loop_88_bpm_wav_629165",
+    "file": "/home/neomuser/noem/loops/lofi_organ_loop_88_bpm_wav_629165.wav",
+    "tags": [
+      "88",
+      "beats",
+      "bpm",
+      "chill",
+      "lo-fi",
+      "lofi",
+      "loop",
+      "loops",
+      "melody",
+      "music",
+      "Organ",
+      "pack",
+      "sample",
+      "samples"
+    ],
+    "bpm": 88,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 629165,
+      "name": "Lofi Organ Loop 88 BPM.wav",
+      "user": "holizna",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "lofi_melody_loop_gmaj_90_bpm_wav_629162",
+    "file": "/home/neomuser/noem/loops/lofi_melody_loop_gmaj_90_bpm_wav_629162.wav",
+    "tags": [
+      "90",
+      "beats",
+      "bpm",
+      "BPM",
+      "chill",
+      "G",
+      "Gmaj",
+      "lo-fi",
+      "lofi",
+      "loop",
+      "loops",
+      "major",
+      "melody",
+      "music",
+      "pack",
+      "sample",
+      "samples"
+    ],
+    "bpm": 90,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 629162,
+      "name": "Lofi melody loop Gmaj 90 BPM.wav",
+      "user": "holizna",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "lofi_kick_snare_vinyl_static_95_bpm_wav_629141",
+    "file": "/home/neomuser/noem/loops/lofi_kick_snare_vinyl_static_95_bpm_wav_629141.wav",
+    "tags": [
+      "76",
+      "bap",
+      "boom",
+      "BPM",
+      "chill",
+      "drum",
+      "Drum",
+      "drums",
+      "Drums",
+      "dusty",
+      "hiphop",
+      "lofi",
+      "Lo-fi",
+      "Lofi",
+      "Loop",
+      "loops",
+      "Loops",
+      "music",
+      "Music",
+      "old",
+      "oldschool",
+      "pack",
+      "sample",
+      "samples",
+      "school",
+      "vinyl"
+    ],
+    "bpm": 95,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 629141,
+      "name": "Lofi - Kick+Snare+Vinyl Static 95 BPM.wav",
+      "user": "holizna",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "76_bpm_lofi_drum_loop_wav_629144",
+    "file": "/home/neomuser/noem/loops/76_bpm_lofi_drum_loop_wav_629144.wav",
+    "tags": [
+      "76",
+      "BPM",
+      "chill",
+      "drum",
+      "Drum",
+      "drums",
+      "hiphop",
+      "lofi",
+      "Lofi",
+      "Loop",
+      "Loops",
+      "music",
+      "pack",
+      "sample",
+      "samples"
+    ],
+    "bpm": 76,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 629144,
+      "name": "76 BPM LOFI DRUM LOOP.wav",
+      "user": "holizna",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "rhodes_lofi_chords_89bpm_neo_soul_trip_hop_psychedelia_acid_jazz_717546",
+    "file": "/home/neomuser/noem/loops/rhodes_lofi_chords_89bpm_neo_soul_trip_hop_psychedelia_acid_jazz_717546.wav",
+    "tags": [
+      "acid",
+      "ambient",
+      "free",
+      "FusionMusic",
+      "jazz",
+      "keyboard",
+      "keys",
+      "Lofi",
+      "loop",
+      "Psychedelia",
+      "rhodes",
+      "sample",
+      "sound",
+      "TripHop",
+      "Trippy"
+    ],
+    "bpm": 89,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 717546,
+      "name": "Rhodes LoFi Chords 89bpm - Neo Soul - Trip Hop - Psychedelia - Acid Jazz",
+      "user": "relajaolab",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "flute_beat_by_cvltiv8r_93bpm_6_wav_788189",
+    "file": "/home/neomuser/noem/loops/flute_beat_by_cvltiv8r_93bpm_6_wav_788189.wav",
+    "tags": [
+      "Beat",
+      "chill",
+      "drumloop",
+      "Flute",
+      "Hip",
+      "hiphop",
+      "hop",
+      "jazz",
+      "lofi",
+      "loop",
+      "native",
+      "pretty",
+      "trippy"
+    ],
+    "bpm": 93,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 788189,
+      "name": "Flute Beat by CVLTIV8R 93bpm 6.wav",
+      "user": "CVLTIV8R",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar3_wav_74196",
+    "file": "/home/neomuser/noem/loops/bossa_guitar3_wav_74196.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74196,
+      "name": "bossa_guitar3.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar2_strum_wav_74195",
+    "file": "/home/neomuser/noem/loops/bossa_guitar2_strum_wav_74195.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74195,
+      "name": "bossa_guitar2_strum.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar6_variation_wav_74199",
+    "file": "/home/neomuser/noem/loops/bossa_guitar6_variation_wav_74199.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74199,
+      "name": "bossa_guitar6_variation.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_nova_loop_thank_you_for_shopping_464924",
+    "file": "/home/neomuser/noem/loops/bossa_nova_loop_thank_you_for_shopping_464924.wav",
+    "tags": [
+      "electric-piano",
+      "elevator-music",
+      "loop",
+      "music",
+      "please-stand-by",
+      "production",
+      "technical-difficulties",
+      "video"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 464924,
+      "name": "(Bossa Nova Loop) Thank You for Shopping!",
+      "user": "plasterbrain",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar5_wav_74198",
+    "file": "/home/neomuser/noem/loops/bossa_guitar5_wav_74198.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74198,
+      "name": "bossa_guitar5.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar4_wav_74197",
+    "file": "/home/neomuser/noem/loops/bossa_guitar4_wav_74197.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74197,
+      "name": "bossa_guitar4.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "short_elevator_music_loop_659889",
+    "file": "/home/neomuser/noem/loops/short_elevator_music_loop_659889.wav",
+    "tags": [
+      "bossa",
+      "elevator",
+      "loop",
+      "loopable",
+      "music",
+      "nova",
+      "ring",
+      "simple",
+      "tone"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 659889,
+      "name": "Short Elevator Music Loop",
+      "user": "BlondPanda",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar7_variation_wav_74200",
+    "file": "/home/neomuser/noem/loops/bossa_guitar7_variation_wav_74200.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74200,
+      "name": "bossa_guitar7_variation.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar8_wav_74201",
+    "file": "/home/neomuser/noem/loops/bossa_guitar8_wav_74201.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74201,
+      "name": "bossa_guitar8.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  {
+    "id": "bossa_guitar2_wav_74194",
+    "file": "/home/neomuser/noem/loops/bossa_guitar2_wav_74194.wav",
+    "tags": [
+      "bossa-nova",
+      "brasil",
+      "brazil",
+      "brazilian",
+      "finger-picking",
+      "guitar",
+      "mpb",
+      "nylon-string",
+      "samba"
+    ],
+    "bpm": null,
+    "key": null,
+    "src": {
+      "provider": "freesound",
+      "id": 74194,
+      "name": "bossa_guitar2.wav",
+      "user": "justinrobert",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  }
+]
