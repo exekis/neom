@@ -345,7 +345,7 @@ const hasClerk = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 type SignInBtnProps = { children: React.ReactNode; mode?: 'modal' | 'redirect'; afterSignInUrl?: string; afterSignUpUrl?: string; redirectUrl?: string };
 const SignInButtonDyn: React.ComponentType<SignInBtnProps> = hasClerk
   ? NextDynamic(() => import('@clerk/nextjs').then(m => m.SignInButton), { ssr: false })
-  : function FallbackSignIn({ children }: { children: React.ReactNode }) { return <Link href="/daw">{children}</Link>; };
+  : function FallbackSignIn({ children }: { children: React.ReactNode }) { return <Link href="/workflows">{children}</Link>; };
 const SignedInDyn: React.ComponentType<{ children: React.ReactNode }> = hasClerk
   ? NextDynamic(() => import('@clerk/nextjs').then(m => m.SignedIn), { ssr: false })
   : () => null;
@@ -577,14 +577,14 @@ export function LandingPage() {
 
           {/* If user is signed in, go straight to the studio. Otherwise open Clerk modal. */}
           <SignedInDyn>
-            <Link href="/daw">
+            <Link href="/workflows">
               <ClerkButtonChild>
                 Enter Studio
               </ClerkButtonChild>
             </Link>
           </SignedInDyn>
           <SignedOutDyn>
-            <SignInButtonDyn mode="modal" afterSignInUrl="/daw" afterSignUpUrl="/daw">
+            <SignInButtonDyn mode="modal" afterSignInUrl="/workflows" afterSignUpUrl="/workflows">
               <ClerkButtonChild>
                 Enter Studio
               </ClerkButtonChild>

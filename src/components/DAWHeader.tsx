@@ -22,6 +22,7 @@ import {
   Bot,
   HelpCircle,
   FolderOpen,
+  Save,
   SkipBack,
   SkipForward
 } from "lucide-react";
@@ -49,6 +50,7 @@ interface DAWHeaderProps {
   onShowHotkeys: () => void;
   onShowWorkspace: () => void;
   onOpenProjectModal?: () => void;
+  onQuickSave?: () => void;
   onExportWAV?: () => void;
   onSkipToBeginning?: () => void;
   onSkipToEnd?: () => void;
@@ -78,6 +80,7 @@ export function DAWHeader({
   onShowHotkeys,
   onShowWorkspace,
   onOpenProjectModal,
+  onQuickSave,
   onExportWAV,
   onSkipToBeginning,
   onSkipToEnd,
@@ -313,6 +316,16 @@ export function DAWHeader({
               title="Project Manager"
             >
               <Music className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {onQuickSave && (
+            <button
+              onClick={onQuickSave}
+              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors"
+              title="Save Project (Ctrl+S)"
+            >
+              <Save className="w-3.5 h-3.5" />
             </button>
           )}
 

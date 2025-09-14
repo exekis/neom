@@ -49,6 +49,8 @@ export default function DAWPage() {
   const [isLooping, setIsLooping] = useState(false);
   const [isMetronomeEnabled, setIsMetronomeEnabled] = useState(false);
   const [masterVolume, setMasterVolume] = useState(80);
+  const [isFirstProject, setIsFirstProject] = useState(true);
+  const [hasAutoSaved, setHasAutoSaved] = useState(false);
   const [undoStack] = useState<string[]>([]);
   const [redoStack] = useState<string[]>([]);
   const [showHotkeys, setShowHotkeys] = useState(false);
@@ -150,6 +152,39 @@ export default function DAWPage() {
     initializeTrackState(newTrack.id);
   }, [tracks.length, createEmptyAudioBuffer, initializeTrackState]);
 
+  const handleSaveProject = useCallback(async (projectName: string) => {
+    const audioContext = initAudioContext();
+    await projectManager.saveProject(
+      projectName,
+      tracks,
+      trackStates,
+      masterVolume,
+      120,
+      audioContext
+    );
+    setProjectName(projectName);
+  }, [initAudioContext, projectManager, tracks, trackStates, masterVolume]);
+
+  const handleQuickSave = useCallback(async () => {
+    await handleSaveProject(projectName);
+  }, [handleSaveProject, projectName]);
+
+  // Auto-save first project when tracks are added
+  useEffect(() => {
+    if (isFirstProject && tracks.length > 0 && !hasAutoSaved) {
+      const autoSave = async () => {
+        try {
+          await handleSaveProject("My First Project");
+          setHasAutoSaved(true);
+          setIsFirstProject(false);
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        }
+      };
+      autoSave();
+    }
+  }, [tracks.length, isFirstProject, hasAutoSaved, handleSaveProject]);
+
   // Keyboard hotkeys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -161,6 +196,10 @@ export default function DAWPage() {
       // Check for Ctrl/Cmd combinations first
       if (e.ctrlKey || e.metaKey) {
         switch (e.key.toLowerCase()) {
+          case 's':
+            e.preventDefault();
+            handleQuickSave(); // Ctrl+S for save
+            break;
           case 'z':
             e.preventDefault();
             if (e.shiftKey) {
@@ -248,7 +287,7 @@ export default function DAWPage() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, skipToBeginning, skipToEnd, isRecording, isLooping, handleUndo, handleRedo, addNewTrack]);
+  }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, skipToBeginning, skipToEnd, isRecording, isLooping, handleUndo, handleRedo, addNewTrack, handleQuickSave]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -258,6 +297,22 @@ export default function DAWPage() {
 
     // Load audio from sessionStorage if coming from workflow or create mock tracks
     const loadSessionAudio = async () => {
+      // Check for project parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project');
+      
+      if (projectId) {
+        try {
+          const audioContext = initAudioContext();
+          await projectManager.loadProject(projectId, audioContext);
+          setIsFirstProject(false);
+          setHasAutoSaved(true);
+          return; // Exit early if project loaded successfully
+        } catch (error) {
+          console.error('Error loading project from URL:', error);
+        }
+      }
+
       const audioUrl = sessionStorage.getItem('daw-audio-url');
       const audioName = sessionStorage.getItem('daw-audio-name');
 
@@ -326,7 +381,7 @@ export default function DAWPage() {
     if (isLoaded && isSignedIn) {
       loadSessionAudio();
     }
-  }, [isSignedIn, isLoaded, initAudioContext, createEmptyAudioBufferWithDuration, initializeTrackState]);
+  }, [isSignedIn, isLoaded, initAudioContext, createEmptyAudioBufferWithDuration, initializeTrackState, projectManager]);
 
   if (!isLoaded) {
     return (
@@ -426,18 +481,6 @@ export default function DAWPage() {
     ));
   };
 
-  const handleSaveProject = async (projectName: string) => {
-    const audioContext = initAudioContext();
-    await projectManager.saveProject(
-      projectName,
-      tracks,
-      trackStates,
-      masterVolume,
-      120,
-      audioContext
-    );
-  };
-
   const handleLoadProject = async (projectId: string) => {
     const audioContext = initAudioContext();
     await projectManager.loadProject(projectId, audioContext);
@@ -517,6 +560,7 @@ export default function DAWPage() {
           onShowHotkeys={() => setShowHotkeys(true)}
           onShowWorkspace={() => setShowWorkspace(true)}
           onOpenProjectModal={handleOpenProjectModal}
+          onQuickSave={handleQuickSave}
           onExportWAV={handleExportWAV}
           onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
           onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
