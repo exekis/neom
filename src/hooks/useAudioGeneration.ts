@@ -83,41 +83,6 @@ export function useAudioGeneration() {
       return introAudioUrl;
     }
   }, []);
-        let details = '';
-        try {
-          const errJson = await res.json();
-          details = errJson?.error || errJson?.details || '';
-        } catch {
-          try { details = await res.text(); } catch {}
-        }
-        throw new Error(`AI route failed: ${res.status}${details ? ` — ${details}` : ''}`);
-      }
-
-      // Increment progress a bit while parsing
-      setState(prev => ({ ...prev, progress: 40, message: 'Routing successful. Executing operation...' }));
-
-      const data = await res.json();
-      // data.modifiedUrl is a "/files/..." path. Prefix with host
-      const absoluteAudioUrl = `${process.env.BACKEND_API_URL}${data.modifiedUrl}`;
-
-      setState(prev => ({ ...prev, progress: 100, message: 'Generation complete!' }));
-
-      // Slight delay to allow the user to see completion
-      setTimeout(() => {
-        setState(prev => ({ ...prev, isGenerating: false, audioUrl: absoluteAudioUrl }));
-      }, 500);
-
-      return data;
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        isGenerating: false,
-        error: err instanceof Error ? err.message : 'AI route failed',
-        message: 'Generation failed'
-      }));
-      throw err;
-    }
-  }, []);
 
   const generateAudio = useCallback(async (params: GenerationParams) => {
     setState(prev => ({
