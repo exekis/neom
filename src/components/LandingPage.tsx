@@ -117,6 +117,31 @@ const ParticlesBackground = () => {
   );
 };
 
+// Subtle floating musical notes for extra flair (non-interactive)
+const FloatingNotes = () => {
+  const notes = [
+    { Icon: Music, x: '10%', y: '20%', delay: 0 },
+    { Icon: Mic, x: '85%', y: '30%', delay: 0.8 },
+    { Icon: Music, x: '20%', y: '70%', delay: 0.4 },
+    { Icon: Mic, x: '70%', y: '75%', delay: 1.2 },
+  ];
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0">
+      {notes.map(({ Icon, x, y, delay }, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: [0, 1, 1, 0], y: [12, -8, -8, 12] }}
+          transition={{ duration: 6 + i, repeat: Infinity, delay, ease: 'easeInOut' }}
+          style={{ position: 'absolute', left: x, top: y }}
+        >
+          <Icon className="w-5 h-5 text-slate-400/40" />
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
 const AudioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -426,180 +451,109 @@ export function LandingPage() {
       <ParticlesBackground />
 
       {/* Hero Section */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      <section className="min-h-screen flex items-center px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 to-slate-950/80" />
+        <FloatingNotes />
 
-        <div ref={heroRef} className="text-center max-w-4xl mx-auto relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="mb-4"
-          >
-            <TrebleClefEpicycles className="mx-auto max-w-5xl" height={360} maxCircles={48} speed={1.1} />
-          </motion.div>
+        <div ref={heroRef} className="relative z-10 max-w-6xl mx-auto w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-10">
+            <div className="text-center md:text-left">
+                <div className="inline-block w-full md:w-auto rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/15 px-6 py-6 md:px-8 md:py-8">
+              <motion.h1
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0, backgroundPosition: ['0% 0%', '100% 0%', '0% 0%'] }}
+                transition={{ delay: 0.3, duration: 1, backgroundPosition: { duration: 8, repeat: Infinity, ease: 'linear' } }}
+                className="text-7xl md:text-9xl font-black mb-6 leading-none tracking-tight bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: 'linear-gradient(90deg, #e2e8f0, #a78bfa, #22d3ee, #e2e8f0)',
+                  backgroundSize: '200% 100%'
+                }}
+              >
+                NEOM
+              </motion.h1>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 1 }}
-            className="text-7xl md:text-9xl font-black mb-6 leading-none tracking-tight text-white"
-          >
-            NEOM
-          </motion.h1>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+                className="w-32 h-1 bg-slate-300 md:mx-0 mx-auto mb-8 rounded-full"
+              />
 
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            className="w-32 h-1 bg-slate-300 mx-auto mb-8 rounded-full"
-          />
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.8 }}
+                className="text-2xl md:text-3xl mb-4 font-light text-slate-300"
+              >
+                AI Audio Co-Pilot
+              </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.8 }}
-            className="text-2xl md:text-3xl mb-4 font-light text-slate-300"
-          >
-            AI Audio Co-Pilot
-          </motion.p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.0, duration: 0.8 }}
+                className="text-lg md:text-xl text-slate-400 mb-12 md:mb-0 max-w-2xl md:mx-0 mx-auto leading-relaxed"
+              >
+                Professional audio production powered by artificial intelligence
+              </motion.p>
+              </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-            className="text-lg md:text-xl text-slate-400 mb-16 max-w-2xl mx-auto leading-relaxed"
-          >
-            Professional audio production powered by artificial intelligence
-          </motion.p>
+              {/* Primary CTA just below the panel */}
+              <div className="mt-6 md:mt-8">
+                <div className="inline-flex w-full md:w-auto flex-col md:flex-row items-center gap-4 md:gap-6 rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/15 px-5 py-4 md:px-6 md:py-5">
+                  <p className="text-slate-300 m-0">Jump right in and start creating.</p>
+                  <div className="flex items-center gap-4">
+                    <SignedInDyn>
+                      <Link href="/workflows">
+                        <ClerkButtonChild>
+                          Enter Studio
+                        </ClerkButtonChild>
+                      </Link>
+                    </SignedInDyn>
+                    <SignedOutDyn>
+                      <SignInButtonDyn mode="modal" afterSignInUrl="/workflows" afterSignUpUrl="/workflows">
+                        <ClerkButtonChild>
+                          Enter Studio
+                        </ClerkButtonChild>
+                      </SignInButtonDyn>
+                    </SignedOutDyn>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="relative md:justify-self-end"
+            >
+              {/* Soft glow behind the epicycles */}
+              <div
+                className="pointer-events-none absolute -inset-6 -z-10 blur-3xl opacity-60"
+                style={{
+                  background:
+                    'radial-gradient(40% 40% at 50% 50%, rgba(139,92,246,0.35) 0%, rgba(34,211,238,0.22) 35%, rgba(15,23,42,0.0) 70%)'
+                }}
+              />
+              <TrebleClefEpicycles className="max-w-5xl" height={480} maxCircles={500} speed={0.3} />
+            </motion.div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 8, 0] }}
-            transition={{ delay: 1.5, duration: 0.5, y: { duration: 2, repeat: Infinity } }}
-            className="cursor-pointer"
+            transition={{ delay: 1.4, duration: 0.5, y: { duration: 2, repeat: Infinity } }}
+            className="cursor-pointer mt-16"
           >
             <ChevronDown className="w-8 h-8 mx-auto text-slate-400 hover:text-white transition-colors" />
           </motion.div>
         </div>
       </section>
 
-      {/* Journey Map Section */}
-      <section ref={mapRef} className="py-32 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-20 text-center">Your Creative Journey</h2>
+      {/* Removed lower marketing sections; CTA moved into hero */}
 
-          <div className="relative">
-            {/* Path Line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-slate-700 to-slate-800 rounded-full" />
-
-            <div className="space-y-32">
-              {[
-                {
-                  title: "Upload",
-                  desc: "Drop your audio files into the studio",
-                  icon: Music,
-                  position: "left"
-                },
-                {
-                  title: "Create",
-                  desc: "AI understands your natural language commands",
-                  icon: Activity,
-                  position: "right"
-                },
-                {
-                  title: "Perfect",
-                  desc: "Professional-grade effects and mastering",
-                  icon: Zap,
-                  position: "left"
-                }
-              ].map((step, i) => (
-                <div key={i} className={`flex items-center ${step.position === 'right' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`w-1/2 ${step.position === 'right' ? 'pl-16' : 'pr-16 text-right'}`}>
-                    <h3 className="text-2xl font-semibold mb-4">{step.title}</h3>
-                    <p className="text-slate-400 text-lg">{step.desc}</p>
-                  </div>
-
-                  <div className="map-point w-16 h-16 bg-slate-800 rounded-full border-4 border-slate-700
-                                  flex items-center justify-center z-10 relative">
-                    <step.icon className="w-6 h-6 text-white" />
-                  </div>
-
-                  <div className="w-1/2" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section ref={featuresRef} className="py-32 px-6 bg-slate-900/50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-20 text-center">Studio Features</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              {
-                icon: Music,
-                title: "AI-Powered Effects",
-                desc: "Professional audio effects controlled by natural language commands",
-              },
-              {
-                icon: Zap,
-                title: "Real-time Processing",
-                desc: "Instant audio manipulation with zero-latency feedback loops",
-              },
-              {
-                icon: Activity,
-                title: "Studio Quality",
-                desc: "Broadcast-ready output with precision audio engineering",
-              }
-            ].map((feature, i) => (
-              <div key={i} className="feature-card text-center">
-                <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-8">
-                  <feature.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section ref={ctaRef} className="py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-bold mb-8">Ready to Create?</h2>
-          <p className="text-xl text-slate-400 mb-16 max-w-2xl mx-auto">
-            Join thousands of creators using AI to enhance their audio production workflow
-          </p>
-
-          {/* If user is signed in, go straight to the studio. Otherwise open Clerk modal. */}
-          <SignedInDyn>
-            <Link href="/workflows">
-              <ClerkButtonChild>
-                Enter Studio
-              </ClerkButtonChild>
-            </Link>
-          </SignedInDyn>
-          <SignedOutDyn>
-            <SignInButtonDyn mode="modal" afterSignInUrl="/workflows" afterSignUpUrl="/workflows">
-              <ClerkButtonChild>
-                Enter Studio
-              </ClerkButtonChild>
-            </SignInButtonDyn>
-          </SignedOutDyn>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-slate-800 bg-slate-900/50">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-slate-400">© 2025 NEOM. Built for creators, powered by AI.</p>
-        </div>
-      </footer>
+      {/* Footer removed per request */}
     </div>
     </>
   );
@@ -611,9 +565,9 @@ function ClerkButtonChild({ onClick, children }: { onClick?: React.MouseEventHan
       onClick={onClick}
       whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.95 }}
-      className="group px-16 py-6 bg-white text-slate-950 text-xl font-semibold rounded-2xl
-                 hover:bg-slate-100 transition-all duration-300 cursor-pointer
-                 shadow-2xl hover:shadow-white/10"
+      className="group px-12 py-5 bg-white/85 text-slate-900 text-lg font-semibold rounded-2xl
+                 hover:bg-white/70 transition-colors duration-200 cursor-pointer
+                 shadow-lg ring-1 ring-white/30"
     >
       {children}
     </motion.button>
