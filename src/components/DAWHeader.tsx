@@ -55,6 +55,8 @@ interface DAWHeaderProps {
   onSkipToBeginning?: () => void;
   onSkipToEnd?: () => void;
   onPlayFromClick?: () => void;
+  showAudioLibrary?: boolean;
+  onToggleAudioLibrary?: () => void;
 }
 
 export function DAWHeader({
@@ -84,7 +86,9 @@ export function DAWHeader({
   onExportWAV,
   onSkipToBeginning,
   onSkipToEnd,
-  onPlayFromClick
+  onPlayFromClick,
+  showAudioLibrary,
+  onToggleAudioLibrary
 }: DAWHeaderProps) {
   const { user } = useUser();
   const [isEditingName, setIsEditingName] = useState(false);
@@ -308,6 +312,20 @@ export function DAWHeader({
           >
             <FolderOpen className="w-3.5 h-3.5" />
           </button>
+
+          {onToggleAudioLibrary && (
+            <button
+              onClick={onToggleAudioLibrary}
+              className={`p-1.5 transition-colors rounded ${
+                showAudioLibrary 
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white'
+              }`}
+              title="Audio Library"
+            >
+              <Music className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {onOpenProjectModal && (
             <button

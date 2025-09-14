@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Upload, Send, Music } from 'lucide-react';
-import { useAudioGeneration } from '@/hooks/useAudioGeneration';
+import { useAudioGeneration } from '@/hooks/useAudioGenerationHardcoded';
 import GenerationProgress from '@/components/GenerationProgress';
 import WaveformModal from '@/components/WaveformModal';
 
@@ -70,14 +70,9 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
         text: textParts.filter(Boolean).join(', ')
       });
 
-      // Optionally prefetch manifest to show later
-      if (data?.manifestUrl) {
-        const manifestRes = await fetch(`${process.env.BACKEND_API_URL}${data.manifestUrl}`);
-        if (manifestRes.ok) {
-          await manifestRes.json();
-          // In the future we can surface this in a provenance panel
-        }
-      }
+      // For hardcoded workflow, data is a string URL directly
+      // No need to fetch manifest since we're using a local audio file
+      console.log('Generated audio:', data);
 
       // Optionally warm up history endpoint
       try {

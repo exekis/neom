@@ -19,7 +19,11 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     if (audioContext && isPlaying) {
       const elapsed = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
       setCurrentTime(Math.max(0, elapsed));
-      animationFrameRef.current = requestAnimationFrame(updateCurrentTime);
+      
+      // Reduce update frequency for better performance (30fps instead of 60fps)
+      animationFrameRef.current = requestAnimationFrame(() => {
+        setTimeout(updateCurrentTime, 33); // ~30fps
+      });
     }
   }, [audioContext, isPlaying]);
 

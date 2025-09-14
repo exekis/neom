@@ -13,7 +13,7 @@ const SignInDyn = hasClerk
             Authentication Unavailable
           </h1>
           <p className="text-slate-600 mb-6">Sign-in is disabled because no Clerk publishable key is configured.</p>
-          <Link href={redirectUrl || '/daw'} className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">
+          <Link href={redirectUrl || '/workflows'} className="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">
             Continue
           </Link>
         </div>
@@ -49,7 +49,7 @@ function ClerkSignInWithProvider() {
             footerActionLink: "text-purple-600 hover:text-purple-700"
           }
         }}
-        redirectUrl="/daw"
+        redirectUrl="/workflows"
       />
     </ClerkProviderDyn>
   );

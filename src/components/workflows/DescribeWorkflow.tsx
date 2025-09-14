@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Send, Music, Mic2, FileText } from 'lucide-react';
-import { useAudioGeneration } from '@/hooks/useAudioGeneration';
+import useAudioGeneration from '@/hooks/useAudioGenerationHardcoded';
 import GenerationProgress from '@/components/GenerationProgress';
 import WaveformModal from '@/components/WaveformModal';
 

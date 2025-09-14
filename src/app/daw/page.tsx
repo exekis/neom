@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AudioTrack } from "../../types/AudioTrack";
 import { SimpleTimelineUI } from "../../components/SimpleTimelineUI";
-import { EnhancedTrackView } from "../../components/EnhancedTrackView";
+import { OptimizedTrackView } from "../../components/OptimizedTrackView";
 import { DAWHeader } from "../../components/DAWHeader";
 import { DAWSidebar } from "../../components/DAWSidebar";
 import { ChatSidebar } from "../../components/ChatSidebar";
@@ -19,6 +19,7 @@ import { useProjectManager } from "../../hooks/useProjectManager";
 import { useAudioExporter } from "../../hooks/useAudioExporter";
 import { UploadLoopsButton } from "../../components/UploadLoopsButton";
 import { PersistentChatSidebar } from "../../components/PersistentChatSidebar";
+import { AudioLibrary } from "../../components/AudioLibrary";
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -57,6 +58,7 @@ export default function DAWPage() {
   const [showWorkspace, setShowWorkspace] = useState(false);
   const [showAudioEditor, setShowAudioEditor] = useState(false);
   const [editingTrack, setEditingTrack] = useState<AudioTrack | null>(null);
+  const [showAudioLibrary, setShowAudioLibrary] = useState(true);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -534,6 +536,42 @@ export default function DAWPage() {
     }
   };
 
+  const handleAudioLibraryDrop = async (audioFile: { name: string; path: string }) => {
+    try {
+      // Load the audio file and create an AudioBuffer
+      const audioContext = initAudioContext();
+      const response = await fetch(audioFile.path);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Create a new track with the dropped audio file
+      const newTrack: AudioTrack = {
+        id: Date.now().toString(),
+        name: audioFile.name,
+        audioBuffer: audioBuffer,
+        color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
+        startTime: 0,
+        duration: audioBuffer.duration,
+      };
+      
+      setTracks(prev => [...prev, newTrack]);
+      initializeTrackState(newTrack.id);
+    } catch (error) {
+      console.error('Failed to add audio file to track:', error);
+      // Fallback to empty track
+      const newTrack: AudioTrack = {
+        id: Date.now().toString(),
+        name: audioFile.name,
+        audioBuffer: createEmptyAudioBuffer(),
+        color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
+        startTime: 0,
+        duration: 30,
+      };
+      setTracks(prev => [...prev, newTrack]);
+      initializeTrackState(newTrack.id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
       <div className="flex-1 flex flex-col min-w-0">
@@ -565,6 +603,8 @@ export default function DAWPage() {
           onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
           onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
           onPlayFromClick={() => tracks.length > 0 && playFromClick(tracks)}
+          showAudioLibrary={showAudioLibrary}
+          onToggleAudioLibrary={() => setShowAudioLibrary(!showAudioLibrary)}
         />
 
         <div className="px-4 pt-2">
@@ -584,7 +624,7 @@ export default function DAWPage() {
             </div>
 
             <div className="flex-1 min-h-0 timeline-container overflow-y-auto bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-6">
-              <EnhancedTrackView
+              <OptimizedTrackView
                 tracks={tracks}
                 selectedTrackIndex={selectedTrackIndex}
                 trackStates={trackStates}
@@ -596,7 +636,8 @@ export default function DAWPage() {
                 onTrackVolumeChange={handleTrackVolumeChange}
                 onTrackNameChange={handleTrackNameChange}
                 onTrackSettings={handleOpenTrackEditor}
-                onTrackAIAgent={(trackId) => console.log('Track AI agent:', trackId)}
+                onTrackAIAgent={(trackId: string) => console.log('Track AI agent:', trackId)}
+                onAddTrack={addNewTrack}
                 currentTime={currentTime}
                 isPlaying={isPlaying}
                 onSeek={seek}
@@ -656,6 +697,13 @@ export default function DAWPage() {
         currentProjectName={projectName}
         isLoading={isLoadingProjects}
       />
+
+      {/* Audio Library */}
+      {showAudioLibrary && (
+        <AudioLibrary
+          onAddToTrack={handleAudioLibraryDrop}
+        />
+      )}
 
       {/* Persistent Chat Sidebar */}
       <PersistentChatSidebar
