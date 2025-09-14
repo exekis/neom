@@ -8,6 +8,7 @@ interface SimpleTimelineUIProps {
 
 export function SimpleTimelineUI({ duration }: SimpleTimelineUIProps) {
   const [currentPosition, setCurrentPosition] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -63,36 +64,67 @@ export function SimpleTimelineUI({ duration }: SimpleTimelineUIProps) {
           </div>
         </div>
 
-        {/* Waveform Visualization (Static) */}
+        {/* Waveform Visualization (Enhanced Static) */}
         <div className="absolute inset-0 flex items-center px-2">
-          {Array.from({ length: 200 }, (_, i) => (
-            <div
-              key={i}
-              className="flex-1 bg-gray-600 mx-px rounded"
-              style={{
-                height: `${Math.random() * 60 + 10}%`,
-                opacity: i < (currentPosition / duration) * 200 ? 0.8 : 0.3
-              }}
-            />
-          ))}
+          {Array.from({ length: 200 }, (_, i) => {
+            const progress = i / 200;
+            const time = progress * duration;
+
+            // Create more realistic waveform pattern
+            const baseAmplitude = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7; // Main wave
+            const detail = Math.sin(progress * Math.PI * 32) * 0.2; // Fine detail
+            const fadeIn = Math.min(1, time / 3); // 3 second fade in
+            const fadeOut = Math.min(1, (duration - time) / 5); // 5 second fade out
+            const envelope = fadeIn * fadeOut;
+
+            const height = (baseAmplitude + detail) * envelope * 70 + 5;
+            const isPlayed = i < (currentPosition / duration) * 200;
+
+            return (
+              <div
+                key={i}
+                className={`flex-1 mx-px rounded transition-colors duration-200 ${
+                  isPlayed ? 'bg-blue-500' : 'bg-gray-600'
+                }`}
+                style={{
+                  height: `${Math.max(2, height)}%`,
+                  opacity: isPlayed ? 0.9 : 0.4
+                }}
+              />
+            );
+          })}
         </div>
       </div>
 
       {/* Transport Controls */}
       <div className="flex items-center justify-center gap-2">
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
+        <button
+          onClick={() => setCurrentPosition(0)}
+          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+        >
           ⏮ Start
         </button>
-        <button className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
-          ▶ Play
+        <button
+          onClick={() => setIsPlaying(!isPlaying)}
+          className={`px-3 py-2 text-white rounded text-sm transition-colors ${
+            isPlaying ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          {isPlaying ? '⏸ Pause' : '▶ Play'}
         </button>
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
-          ⏸ Pause
-        </button>
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
+        <button
+          onClick={() => {
+            setIsPlaying(false);
+            setCurrentPosition(0);
+          }}
+          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+        >
           ⏹ Stop
         </button>
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
+        <button
+          onClick={() => setCurrentPosition(duration)}
+          className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+        >
           ⏭ End
         </button>
       </div>
