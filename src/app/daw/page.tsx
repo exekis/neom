@@ -20,6 +20,7 @@ import { useAudioExporter } from "../../hooks/useAudioExporter";
 import { UploadLoopsButton } from "../../components/UploadLoopsButton";
 import { PersistentChatSidebar } from "../../components/PersistentChatSidebar";
 import { AudioLibrary } from "../../components/AudioLibrary";
+import { SaveProjectsButton } from "../../components/SaveProjectsButton";
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -614,6 +615,13 @@ export default function DAWPage() {
             }}
           />
         </div>
+        <div className="p-4">
+          <SaveProjectsButton 
+            onSaved={(p) => {
+              console.log('saved project', p.id);
+            }}
+          />
+        </div>
 
         <main className="flex-1 p-6 overflow-hidden">
           <div className="h-full flex flex-col space-y-6">
@@ -758,7 +766,7 @@ export default function DAWPage() {
         onUpdateTrack={handleUpdateEditedTrack}
       />
 
-      <ProjectModal
+      {/* <ProjectModal
         isOpen={showProjectModal}
         onClose={() => setShowProjectModal(false)}
         onSaveProject={handleSaveProject}
@@ -768,7 +776,7 @@ export default function DAWPage() {
         savedProjects={projectManager.savedProjects}
         currentProjectName={projectName}
         isLoading={isLoadingProjects}
-      />
+      /> */}
 
       {/* Audio Library */}
       {showAudioLibrary && (
