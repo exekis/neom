@@ -88,19 +88,44 @@ export function RemixWorkflow({ onBack, onApplyToDAW }: RemixWorkflowProps) {
     }
   }, [audioBuffer, audioUrl, isGenerating]);
 
-  const handleOpenInDAW = () => {
-    if (audioUrl && audioBuffer) {
-      const name = 'Generated remix track';
-      if (onApplyToDAW) {
-        onApplyToDAW({ audioBuffer, audioUrl, name });
-        setShowWaveformModal(false);
+  const handleSendToDAW = async () => {
+    try {
+      const tracksToSend = [];
+      
+      // Process uploaded file if available
+      if (uploadedFile) {
+        const uploadedAudioUrl = URL.createObjectURL(uploadedFile);
+        tracksToSend.push({
+          name: uploadedFile.name.replace(/\.[^/.]+$/, ""),
+          audioUrl: uploadedAudioUrl
+        });
+      }
+      
+      // Process generated remix if available
+      if (audioUrl) {
+        const name = 'Generated remix track';
+        tracksToSend.push({
+          name: name,
+          audioUrl: audioUrl
+        });
+      }
+      
+      if (tracksToSend.length === 0) {
+        console.warn('No tracks available to send to DAW');
         return;
       }
-      sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', name);
-    }
-    if (!onApplyToDAW) {
+      
+      // Store multiple tracks in sessionStorage
+      sessionStorage.setItem('daw-tracks', JSON.stringify(tracksToSend));
+      
+      // Clear any existing single track data
+      sessionStorage.removeItem('daw-audio-url');
+      sessionStorage.removeItem('daw-audio-name');
+      
+      // Navigate to DAW
       window.location.href = '/daw';
+    } catch (error) {
+      console.error('Error processing audio tracks for DAW:', error);
     }
   };
 
@@ -178,7 +203,7 @@ export function RemixWorkflow({ onBack, onApplyToDAW }: RemixWorkflowProps) {
                 >
                   {uploadedFile ? (
                     <div className="space-y-4">
-                      <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center
+                      <div className="w-16 h-16 bg-slate-600 rounded-full flex items-center
                                     justify-center mx-auto">
                         <Headphones className="w-8 h-8" />
                       </div>
@@ -188,7 +213,7 @@ export function RemixWorkflow({ onBack, onApplyToDAW }: RemixWorkflowProps) {
                           {(uploadedFile.size / (1024 * 1024)).toFixed(1)} MB
                         </p>
                       </div>
-                      <p className="text-green-500 text-sm">Ready to remix!</p>
+                      <p className="text-slate-400 text-sm">Ready to remix!</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -275,7 +300,7 @@ export function RemixWorkflow({ onBack, onApplyToDAW }: RemixWorkflowProps) {
                 <button
                   onClick={handleSubmit}
                   disabled={isGenerating || !message.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700
+                  className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600
                            py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 cursor-pointer
                            disabled:cursor-not-allowed"
                 >
@@ -303,7 +328,7 @@ export function RemixWorkflow({ onBack, onApplyToDAW }: RemixWorkflowProps) {
         audioUrl={audioUrl}
         audioBuffer={audioBuffer}
         trackName="Generated Remix Track"
-        onOpenInDAW={handleOpenInDAW}
+        onOpenInDAW={handleSendToDAW}
       />
     </div>
   );
