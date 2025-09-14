@@ -21,7 +21,9 @@ import {
   Volume2,
   Bot,
   HelpCircle,
-  FolderOpen
+  FolderOpen,
+  SkipBack,
+  SkipForward
 } from "lucide-react";
 
 interface DAWHeaderProps {
@@ -48,6 +50,9 @@ interface DAWHeaderProps {
   onShowWorkspace: () => void;
   onOpenProjectModal?: () => void;
   onExportWAV?: () => void;
+  onSkipToBeginning?: () => void;
+  onSkipToEnd?: () => void;
+  onPlayFromClick?: () => void;
 }
 
 export function DAWHeader({
@@ -73,7 +78,10 @@ export function DAWHeader({
   onShowHotkeys,
   onShowWorkspace,
   onOpenProjectModal,
-  onExportWAV
+  onExportWAV,
+  onSkipToBeginning,
+  onSkipToEnd,
+  onPlayFromClick
 }: DAWHeaderProps) {
   const { user } = useUser();
   const [isEditingName, setIsEditingName] = useState(false);
@@ -158,7 +166,17 @@ export function DAWHeader({
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-slate-800 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+            {/* Skip to Beginning */}
+            <button
+              onClick={onSkipToBeginning}
+              className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
+              title="Skip to Beginning"
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
+
+            {/* Play/Pause */}
             <button
               onClick={isPlaying ? onPause : onPlay}
               className={`p-2 rounded transition-colors ${
@@ -166,19 +184,31 @@ export function DAWHeader({
                   ? 'bg-purple-600 text-white'
                   : 'text-slate-300 hover:text-white hover:bg-slate-700'
               }`}
-              title="Play/Pause (Space)"
+              title="Play/Pause (Enter)"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
 
+            {/* Stop */}
             <button
               onClick={onStop}
               className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
-              title="Stop"
+              title="Stop (Esc)"
             >
               <Square className="w-4 h-4" />
             </button>
 
+            {/* Play from Click Position */}
+            <button
+              onClick={onPlayFromClick}
+              className="p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-400/20 rounded transition-colors relative"
+              title="Play from Cursor Position (Space)"
+            >
+              <Play className="w-3 h-3" />
+              <span className="text-xs absolute -top-1 -right-1 bg-amber-500 text-white rounded-full w-3 h-3 flex items-center justify-center" style={{fontSize: '8px'}}>C</span>
+            </button>
+
+            {/* Record */}
             <button
               onClick={onRecord}
               className={`p-2 rounded transition-colors ${
@@ -191,6 +221,7 @@ export function DAWHeader({
               <Circle className="w-4 h-4" />
             </button>
 
+            {/* Loop */}
             <button
               onClick={onToggleLoop}
               className={`p-2 rounded transition-colors ${
@@ -201,6 +232,15 @@ export function DAWHeader({
               title="Loop (L)"
             >
               <Repeat className="w-4 h-4" />
+            </button>
+
+            {/* Skip to End */}
+            <button
+              onClick={onSkipToEnd}
+              className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
+              title="Skip to End"
+            >
+              <SkipForward className="w-4 h-4" />
             </button>
           </div>
 

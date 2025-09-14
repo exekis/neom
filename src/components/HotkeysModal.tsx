@@ -11,10 +11,13 @@ export function HotkeysModal({ isOpen, onClose }: HotkeysModalProps) {
   if (!isOpen) return null;
 
   const hotkeys = [
-    { key: "Space", description: "Play/Pause audio" },
+    { key: "Space", description: "Play from cursor position" },
+    { key: "Enter", description: "Play/Pause from last position" },
+    { key: "Escape", description: "Stop playback" },
+    { key: "Home", description: "Skip to beginning" },
+    { key: "End", description: "Skip to end" },
     { key: "R", description: "Toggle recording" },
     { key: "L", description: "Toggle loop mode" },
-    { key: "Escape", description: "Stop playback" },
     { key: "Ctrl+Z", description: "Undo last action" },
     { key: "Ctrl+Y / Ctrl+Shift+Z", description: "Redo last action" },
     { key: "Ctrl+Q", description: "Add new track" },

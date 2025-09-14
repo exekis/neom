@@ -78,24 +78,6 @@ export function SimpleTimelineUI({ duration }: SimpleTimelineUIProps) {
         </div>
       </div>
 
-      {/* Transport Controls */}
-      <div className="flex items-center justify-center gap-2">
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
-          ⏮ Start
-        </button>
-        <button className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
-          ▶ Play
-        </button>
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
-          ⏸ Pause
-        </button>
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
-          ⏹ Stop
-        </button>
-        <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors">
-          ⏭ End
-        </button>
-      </div>
     </div>
   );
 }
