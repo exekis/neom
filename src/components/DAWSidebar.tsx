@@ -42,12 +42,8 @@ export function DAWSidebar({ isOpen, onClose }: DAWSidebarProps) {
     );
   };
 
-  if (!isOpen) return null;
-
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 h-full w-80 bg-slate-900 border-l border-slate-700 z-50 flex flex-col">
+    <div className="bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 w-80 flex flex-col h-full shadow-2xl">
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">NEOM Assistant</h2>
@@ -245,7 +241,6 @@ export function DAWSidebar({ isOpen, onClose }: DAWSidebarProps) {
             </div>
           )}
         </div>
-      </div>
-    </>
+    </div>
   );
 }

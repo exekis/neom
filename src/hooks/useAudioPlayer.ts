@@ -17,9 +17,9 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
 
   const updateCurrentTime = useCallback(() => {
     if (audioContext && isPlaying) {
-      const elapsed = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
+      const elapsed = audioContext.currentTime - startTimeRef.current;
       setCurrentTime(Math.max(0, elapsed));
-      
+
       // Reduce update frequency for better performance (30fps instead of 60fps)
       animationFrameRef.current = requestAnimationFrame(() => {
         setTimeout(updateCurrentTime, 33); // ~30fps
@@ -46,7 +46,7 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     }
   }, []);
 
-  const play = useCallback(async (tracks: AudioTrack[]) => {
+  const play = useCallback(async (tracks: AudioTrack[], startFromTime?: number) => {
     if (!audioContext || tracks.length === 0) return;
 
     if (audioContext.state === 'suspended') {
@@ -57,35 +57,46 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
 
     const sourceNodes: AudioBufferSourceNode[] = [];
     const startTime = audioContext.currentTime;
-    startTimeRef.current = startTime;
+    const playbackStartTime = startFromTime ?? pausedAtRef.current;
+
+    startTimeRef.current = startTime - playbackStartTime;
 
     tracks.forEach((track) => {
       const source = audioContext.createBufferSource();
       source.buffer = track.audioBuffer;
       source.connect(audioContext.destination);
-      source.start(startTime + track.startTime);
-      sourceNodes.push(source);
+
+      // Calculate when this track should start relative to the playback start time
+      const trackStartTime = Math.max(0, track.startTime - playbackStartTime);
+      const sourceOffset = Math.max(0, playbackStartTime - track.startTime);
+
+      // Only play tracks that haven't ended yet
+      if (sourceOffset < track.duration) {
+        source.start(startTime + trackStartTime, sourceOffset);
+        sourceNodes.push(source);
+      }
     });
 
     sourceNodesRef.current = sourceNodes;
     setIsPlaying(true);
+    setCurrentTime(playbackStartTime);
     updateCurrentTime();
 
     const handleEnded = () => {
       setIsPlaying(false);
-      setCurrentTime(0);
-      pausedAtRef.current = 0;
+      pausedAtRef.current = currentTime;
     };
 
     if (sourceNodes.length > 0) {
       sourceNodes[0].onended = handleEnded;
     }
-  }, [audioContext, updateCurrentTime, stop]);
+  }, [audioContext, updateCurrentTime, stop, currentTime]);
 
   const pause = useCallback(() => {
     if (audioContext && isPlaying) {
-      const currentPos = audioContext.currentTime - startTimeRef.current + pausedAtRef.current;
-      pausedAtRef.current = currentPos;
+      const currentPos = audioContext.currentTime - startTimeRef.current;
+      pausedAtRef.current = Math.max(0, currentPos);
+      setCurrentTime(currentPos);
       setLastPlayPosition(currentPos);
       stop();
       setIsPlaying(false);
@@ -96,19 +107,24 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     }
   }, [audioContext, isPlaying, stop]);
 
-  const seek = useCallback((time: number) => {
+  const seek = useCallback(async (time: number, tracks?: AudioTrack[]) => {
     const wasPlaying = isPlaying;
+    const seekTime = Math.max(0, time);
+
     if (isPlaying) {
       stop();
     }
-    pausedAtRef.current = Math.max(0, time);
-    setCurrentTime(time);
-    setClickPosition(time);
-    if (wasPlaying) {
-      // Resume playback from new position would require re-creating audio nodes
-      // For now just update the time position
+
+    pausedAtRef.current = seekTime;
+    setCurrentTime(seekTime);
+    setClickPosition(seekTime);
+    setLastPlayPosition(seekTime);
+
+    // If it was playing before seeking, resume playback from the new position
+    if (wasPlaying && tracks) {
+      await play(tracks, seekTime);
     }
-  }, [isPlaying, stop]);
+  }, [isPlaying, stop, play]);
 
   // Play from clicked position (spacebar behavior)
   const playFromClick = useCallback(async (tracks: AudioTrack[]) => {
@@ -170,6 +186,15 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     }
   }, [isPlaying, stop, play]);
 
+  // Toggle play/pause
+  const togglePlayPause = useCallback(async (tracks: AudioTrack[]) => {
+    if (isPlaying) {
+      pause();
+    } else {
+      await play(tracks);
+    }
+  }, [isPlaying, pause, play]);
+
   return {
     isPlaying,
     currentTime,
@@ -183,6 +208,7 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     playFromLast,
     setClickPos,
     skipToBeginning,
-    skipToEnd
+    skipToEnd,
+    togglePlayPause
   };
 }

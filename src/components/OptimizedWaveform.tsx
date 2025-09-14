@@ -13,6 +13,7 @@ interface OptimizedWaveformProps {
   pixelsPerSecond?: number;
   className?: string;
   filePath?: string; // Add file path visualization
+  onSeek?: (time: number) => void;
 }
 
 export function OptimizedWaveform({
@@ -25,7 +26,8 @@ export function OptimizedWaveform({
   currentTime = 0,
   pixelsPerSecond = 60,
   className = "",
-  filePath
+  filePath,
+  onSeek
 }: OptimizedWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
@@ -143,8 +145,21 @@ export function OptimizedWaveform({
     }
   }, [currentTime, startTime, pixelsPerSecond, width]);
 
+  const handleWaveformClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (onSeek) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickTime = startTime + (clickX / pixelsPerSecond);
+      onSeek(Math.max(0, clickTime));
+    }
+  };
+
   return (
-    <div className={`relative ${className}`} style={{ width, height }}>
+    <div
+      className={`relative cursor-pointer ${className}`}
+      style={{ width, height }}
+      onClick={handleWaveformClick}
+    >
       {/* File path display */}
       {filePath && (
         <div className="absolute -top-5 left-0 text-xs text-slate-400 truncate max-w-full">

@@ -18,6 +18,7 @@ export function HotkeysModal({ isOpen, onClose }: HotkeysModalProps) {
     { key: "End", description: "Skip to end" },
     { key: "R", description: "Toggle recording" },
     { key: "L", description: "Toggle loop mode" },
+    { key: "Ctrl+S", description: "Save project" },
     { key: "Ctrl+Z", description: "Undo last action" },
     { key: "Ctrl+Y / Ctrl+Shift+Z", description: "Redo last action" },
     { key: "Ctrl+Q", description: "Add new track" },

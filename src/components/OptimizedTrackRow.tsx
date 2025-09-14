@@ -31,6 +31,7 @@ interface OptimizedTrackRowProps {
   currentTime?: number;
   isPlaying?: boolean;
   pixelsPerSecond?: number;
+  onSeek?: (time: number) => void;
 }
 
 // Memoize the component to prevent unnecessary re-renders
@@ -50,7 +51,8 @@ export const OptimizedTrackRow = memo(function OptimizedTrackRow({
   onOpenAIAgent,
   currentTime = 0,
   isPlaying = false,
-  pixelsPerSecond = 60
+  pixelsPerSecond = 60,
+  onSeek
 }: OptimizedTrackRowProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(track.name);
@@ -221,6 +223,7 @@ export const OptimizedTrackRow = memo(function OptimizedTrackRow({
           pixelsPerSecond={pixelsPerSecond}
           filePath={mockFilePath}
           className="absolute top-0 left-0"
+          onSeek={onSeek}
         />
 
         {/* Track timing info overlay */}

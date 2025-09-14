@@ -49,6 +49,7 @@ export default function AudioWaveform({
     setWaveformData(peaks);
   }, [audioBuffer]);
 
+  // Draw static waveform once (without playhead)
   useEffect(() => {
     if (!canvasRef.current || waveformData.length === 0) return;
 
@@ -61,18 +62,46 @@ export default function AudioWaveform({
 
     const centerY = canvasHeight / 2;
     const barWidth = width / waveformData.length;
+
+    // Draw static waveform bars
+    waveformData.forEach((peak, index) => {
+      const barHeight = peak * (canvasHeight / 2);
+      const x = index * barWidth;
+
+      ctx.fillStyle = '#6b7280';
+      ctx.fillRect(x, centerY - barHeight / 2, barWidth - 0.5, barHeight);
+    });
+  }, [waveformData]);
+
+  // Draw playhead and progress separately to avoid redrawing waveform
+  useEffect(() => {
+    if (!canvasRef.current || waveformData.length === 0) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const { width, height: canvasHeight } = canvas;
+    const centerY = canvasHeight / 2;
+    const barWidth = width / waveformData.length;
     const playheadX = audioBuffer ? (currentTime / audioBuffer.duration) * width : 0;
 
+    // Redraw only the progress bars (more efficient)
     waveformData.forEach((peak, index) => {
       const barHeight = peak * (canvasHeight / 2);
       const x = index * barWidth;
 
       const isPlayed = x < playheadX;
-      ctx.fillStyle = isPlayed ? '#3b82f6' : '#6b7280';
-
-      ctx.fillRect(x, centerY - barHeight / 2, barWidth - 0.5, barHeight);
+      if (isPlayed) {
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(x, centerY - barHeight / 2, barWidth - 0.5, barHeight);
+      } else {
+        ctx.fillStyle = '#6b7280';
+        ctx.fillRect(x, centerY - barHeight / 2, barWidth - 0.5, barHeight);
+      }
     });
 
+    // Draw playhead
     if (audioBuffer) {
       ctx.strokeStyle = '#ef4444';
       ctx.lineWidth = 2;
@@ -81,7 +110,7 @@ export default function AudioWaveform({
       ctx.lineTo(playheadX, canvasHeight);
       ctx.stroke();
     }
-  }, [waveformData, currentTime, audioBuffer]);
+  }, [currentTime, audioBuffer, waveformData]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!audioBuffer || !onTimeUpdate) return;
