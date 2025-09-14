@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, MessageCircle, ChevronRight, ChevronLeft } from "lucide-react";
+import { Send, Wrench, ChevronRight, ChevronLeft } from "lucide-react";
 
 interface Message {
   id: string;
@@ -19,7 +19,7 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Welcome to NEOM AI Audio Co-Pilot! I can help you with audio editing tasks.',
+      text: "Hey, NEOM BUILDER here. Let's craft some audio magic.",
       isUser: false,
       timestamp: new Date()
     }
@@ -68,19 +68,19 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
     const lowerInput = input.toLowerCase();
 
     if (lowerInput.includes('fade')) {
-      return 'I can help you add fade effects! Try selecting a track and specifying fade in or fade out with duration.';
+      return 'Fade effects? Easy. Pick a track, tell me fade in/out + duration. Done.';
     } else if (lowerInput.includes('volume') || lowerInput.includes('gain')) {
-      return 'To adjust volume, I can apply gain changes. Specify the decibel adjustment you need (e.g., "+3dB" or "-6dB").';
+      return 'Volume tweaks coming up. Just say the dB change you need, like "+3dB" or "-6dB".';
     } else if (lowerInput.includes('reverb')) {
-      return 'I can add reverb effects with different presets like "plate", "room", or "hall". Which would you prefer?';
+      return 'Reverb time. Got "plate", "room", or "hall" presets. What vibe you going for?';
     } else if (lowerInput.includes('normalize')) {
-      return 'I can normalize your audio to standard LUFS levels. This ensures consistent loudness across tracks.';
+      return 'Normalize? Sure. I\'ll level out your audio to standard LUFS. Keeps everything balanced.';
     } else if (lowerInput.includes('loop')) {
-      return 'I can add background loops to enhance your track. What style are you looking for? (e.g., punk, jazz, electronic)';
-    } else if (lowerInput.includes('help')) {
-      return 'I can assist with: fade effects, volume/gain adjustments, reverb, normalization, and adding loops. What would you like to work on?';
+      return 'Loops are my specialty. What genre? Punk, jazz, electronic... just say the word.';
+    } else if (lowerInput.includes('help') || lowerInput.includes('what')) {
+      return 'I build: fades, volume tweaks, reverb, normalization, loops. What are we crafting?';
     } else {
-      return `I understand you want to work with "${input}". I can help with audio effects like fade, gain, reverb, normalize, and adding loops. What specific effect would you like to apply?`;
+      return `Got it - working on "${input}". I handle fades, gain, reverb, normalize, loops. Pick your tool.`;
     }
   };
 
@@ -113,8 +113,8 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
             <ChevronLeft className="w-5 h-5" />
           ) : (
             <>
-              <MessageCircle className="w-5 h-5" />
-              <span className="font-medium">AI Chat</span>
+              <Wrench className="w-5 h-5" />
+              <span className="font-medium">NEOM BUILDER</span>
               <ChevronRight className="w-4 h-4 ml-auto" />
             </>
           )}
@@ -172,7 +172,7 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me about audio editing..."
+                placeholder="What are we building today?"
                 className="flex-1 bg-gray-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-600"
               />
               <button
@@ -193,9 +193,9 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
           <button
             onClick={onToggleCollapse}
             className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700/50 rounded-lg"
-            title="Open Chat"
+            title="Open Builder"
           >
-            <MessageCircle className="w-5 h-5" />
+            <Wrench className="w-5 h-5" />
           </button>
           <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
             <span className="text-xs text-white font-bold">{messages.length}</span>
