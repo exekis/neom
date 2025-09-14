@@ -173,6 +173,46 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
     fileInputRef.current?.click();
   };
 
+  const handleSendToDAW = useCallback(async () => {
+    try {
+      const tracksToSend = [];
+      
+      // Process recorded audio if available
+      if (recordedAudio) {
+        const recordedAudioUrl = URL.createObjectURL(recordedAudio);
+        tracksToSend.push({
+          name: 'Recorded Vocal Track',
+          audioUrl: recordedAudioUrl
+        });
+      }
+      
+      // Process generated audio if available
+      if (audioUrl) {
+        tracksToSend.push({
+          name: 'Generated Vocal Track',
+          audioUrl: audioUrl
+        });
+      }
+      
+      if (tracksToSend.length === 0) {
+        console.warn('No tracks available to send to DAW');
+        return;
+      }
+      
+      // Store multiple tracks in sessionStorage
+      sessionStorage.setItem('daw-tracks', JSON.stringify(tracksToSend));
+      
+      // Clear any existing single track data
+      sessionStorage.removeItem('daw-audio-url');
+      sessionStorage.removeItem('daw-audio-name');
+      
+      // Navigate to DAW
+      window.location.href = '/daw';
+    } catch (error) {
+      console.error('Error processing audio tracks for DAW:', error);
+    }
+  }, [recordedAudio, audioUrl]);
+
   const handleSubmit = async () => {
     // Reset all audio states
     setAudioBuffer(null);
@@ -219,6 +259,15 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
   }, [audioBuffer, audioUrl, isGenerating]);
 
   const handleOpenInDAW = () => {
+    // Check if we have both recorded audio and generated audio
+    if (recordedAudio && audioUrl && audioBuffer) {
+      // Send both tracks to DAW
+      handleSendToDAW();
+      setShowWaveformModal(false);
+      return;
+    }
+    
+    // If only generated audio exists
     if (audioUrl && audioBuffer) {
       const name = 'Generated vocal track';
       if (onApplyToDAW) {
@@ -229,6 +278,14 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
       sessionStorage.setItem('daw-audio-url', audioUrl);
       sessionStorage.setItem('daw-audio-name', name);
     }
+    
+    // If only recorded audio exists
+    if (recordedAudio && !audioUrl) {
+      handleSendToDAW();
+      setShowWaveformModal(false);
+      return;
+    }
+    
     if (!onApplyToDAW) {
       window.location.href = '/daw';
     }
@@ -244,15 +301,15 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
     <motion.div 
       className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
       animate={{
-        backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
+        backgroundPosition: ["0% 0%", "50% 50%", "0% 0%"],
       }}
       transition={{
-        duration: 25,
+        duration: 30,
         repeat: Infinity,
         ease: "linear"
       }}
       style={{
-        backgroundSize: "400% 400%"
+        backgroundSize: "200% 200%"
       }}
     >
       <motion.div 
@@ -358,27 +415,35 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
               className="lg:col-span-1 lg:order-2"
             >
               <motion.div
-                className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 hover:border-green-500/30 transition-all duration-500"
+                className="bg-gradient-to-br from-slate-900/90 to-slate-800/70 backdrop-blur-md rounded-3xl p-8 border border-slate-700/40 hover:border-slate-600/60 transition-all duration-700"
                 animate={{
                   boxShadow: [
-                    "0 4px 20px rgba(0, 0, 0, 0.1)",
-                    "0 8px 40px rgba(34, 197, 94, 0.1)",
-                    "0 4px 20px rgba(0, 0, 0, 0.1)"
-                  ]
+                    "0 8px 32px rgba(0, 0, 0, 0.1)",
+                    "0 12px 48px rgba(100, 116, 139, 0.05)",
+                    "0 8px 32px rgba(0, 0, 0, 0.1)"
+                  ],
+                  y: [0, -1, 0]
                 }}
                 transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
+                  boxShadow: {
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  },
+                  y: {
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
                 }}
               >
                 <motion.h2 
-                  className="text-2xl font-semibold mb-8 text-center bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent"
+                  className="text-2xl font-semibold mb-8 text-center text-slate-300"
                   animate={{
-                    scale: [1, 1.02, 1]
+                    opacity: [0.9, 1, 0.9]
                   }}
                   transition={{
-                    duration: 3,
+                    duration: 4,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
@@ -392,7 +457,7 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                     <div className="text-center">
                       {isRecording && (
                         <motion.div 
-                          className="text-3xl font-mono text-green-400 mb-4 tracking-wider"
+                          className="text-3xl font-mono text-slate-300 mb-4 tracking-wider"
                           animate={{
                             scale: [1, 1.05, 1],
                             opacity: [0.8, 1, 0.8]
@@ -494,7 +559,7 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                       transition={{ duration: 0.5 }}
                     >
                       <motion.p 
-                        className="text-sm text-green-400 mb-4 font-medium"
+                        className="text-sm text-slate-300 mb-4 font-medium"
                         animate={{
                           scale: [1, 1.02, 1]
                         }}
@@ -519,7 +584,7 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                             {audioWaveform.map((amplitude: number, index: number) => (
                               <motion.div
                                 key={index}
-                                className="bg-gradient-to-t from-blue-500 to-cyan-400 rounded-full"
+                                className="bg-gradient-to-t from-slate-600 to-slate-400 rounded-full"
                                 style={{
                                   width: '3px',
                                   height: `${Math.max(2, amplitude * 100)}%`,
@@ -543,7 +608,7 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                           onClick={isPlaying ? pauseRecording : playRecording}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500
+                          className="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600
                                    py-3 px-6 rounded-xl font-semibold transition-all duration-300 cursor-pointer shadow-lg"
                         >
                           <motion.div
@@ -558,16 +623,6 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                           </motion.div>
                           {isPlaying ? 'Pause Preview' : 'Play Preview'}
-                        </motion.button>
-
-                        <motion.button
-                          onClick={() => setShowWaveformModal(true)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500
-                                   py-3 px-6 rounded-xl font-semibold transition-all duration-300 cursor-pointer shadow-lg"
-                        >
-                          Prepare for DAW
                         </motion.button>
                       </div>
                     </motion.div>
@@ -615,7 +670,7 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                           ease: "easeInOut"
                         }}
                       >
-                        <Upload className="w-6 h-6 text-slate-400 group-hover:text-green-400 transition-colors" />
+                        <Upload className="w-6 h-6 text-slate-400 group-hover:text-slate-300 transition-colors" />
                       </motion.div>
                       <span className="text-slate-300 group-hover:text-white transition-colors font-medium">
                         {uploadedFile ? uploadedFile.name : 'Choose audio file'}
@@ -634,36 +689,35 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
               className="lg:col-span-1 lg:order-1"
             >
               <motion.div
-                className="bg-gradient-to-br from-slate-900/90 to-slate-800/70 backdrop-blur-md rounded-3xl p-8 h-full border border-slate-700/50 hover:border-purple-500/40 transition-all duration-700"
+                className="bg-gradient-to-br from-slate-900/90 to-slate-800/70 backdrop-blur-md rounded-3xl p-8 h-full border border-slate-700/40 hover:border-slate-600/60 transition-all duration-700"
                 animate={{
                   boxShadow: [
                     "0 8px 32px rgba(0, 0, 0, 0.1)",
-                    "0 12px 48px rgba(168, 85, 247, 0.15)",
+                    "0 12px 48px rgba(100, 116, 139, 0.05)",
                     "0 8px 32px rgba(0, 0, 0, 0.1)"
                   ],
-                  y: [0, -2, 0]
+                  y: [0, -1, 0]
                 }}
                 transition={{
                   boxShadow: {
-                    duration: 6,
+                    duration: 8,
                     repeat: Infinity,
                     ease: "easeInOut"
                   },
                   y: {
-                    duration: 8,
+                    duration: 12,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }
                 }}
               >
                 <motion.h2 
-                  className="text-2xl font-semibold mb-8 text-center bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent"
+                  className="text-2xl font-semibold mb-8 text-center text-slate-300"
                   animate={{
-                    scale: [1, 1.03, 1],
                     opacity: [0.9, 1, 0.9]
                   }}
                   transition={{
-                    duration: 4,
+                    duration: 5,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
@@ -717,8 +771,7 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
                         boxShadow: "0 8px 30px rgba(168, 85, 247, 0.3)"
                       }}
                       whileTap={{ scale: 0.97 }}
-                      className="w-full flex items-center justify-center gap-4 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 
-                               hover:from-purple-500 hover:via-pink-500 hover:to-purple-500
+                      className="w-full flex items-center justify-center gap-4 bg-slate-700 hover:bg-slate-600
                                py-5 rounded-2xl font-semibold transition-all duration-500 disabled:opacity-40 cursor-pointer
                                disabled:cursor-not-allowed shadow-xl relative overflow-hidden group"
                       animate={{
@@ -787,6 +840,63 @@ export function VocalsWorkflow({ onBack, onApplyToDAW }: VocalsWorkflowProps) {
               </motion.div>
             </motion.div>
           </div>
+
+          {/* Single Send to DAW Button */}
+          {(recordedAudio || audioUrl) && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mt-8 text-center"
+            >
+              <motion.button
+                onClick={handleSendToDAW}
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0 8px 30px rgba(100, 116, 139, 0.3)"
+                }}
+                whileTap={{ scale: 0.98 }}
+                className="px-12 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-2xl
+                         transition-all duration-300 cursor-pointer shadow-xl"
+                animate={{
+                  y: [0, -2, 0]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                {(() => {
+                  const trackCount = (recordedAudio ? 1 : 0) + (audioUrl ? 1 : 0);
+                  if (trackCount === 1) {
+                    return recordedAudio ? "Open DAW with Recorded Track" : "Open DAW with Generated Track";
+                  } else {
+                    return "Open DAW with Both Tracks";
+                  }
+                })()}
+              </motion.button>
+              
+              <motion.p 
+                className="text-sm text-slate-400 mt-3"
+                animate={{
+                  opacity: [0.6, 1, 0.6]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                {recordedAudio && audioUrl 
+                  ? 'Both recorded and generated tracks will be loaded'
+                  : recordedAudio 
+                    ? 'Recorded track will be loaded'
+                    : 'Generated track will be loaded'
+                }
+              </motion.p>
+            </motion.div>
+          )}
 
         </div>
       </motion.div>
