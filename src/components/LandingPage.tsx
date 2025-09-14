@@ -10,6 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Particles from 'react-particles';
 import { loadSlim } from 'tsparticles-slim';
 import type { Engine } from 'tsparticles-engine';
+import TrebleClefEpicycles from './TrebleClefEpicycles';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -433,9 +434,9 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="mb-8"
+            className="mb-4"
           >
-            <WaveformVisualizer className="mb-8 justify-center" />
+            <TrebleClefEpicycles className="mx-auto max-w-5xl" height={360} maxCircles={48} speed={1.1} />
           </motion.div>
 
           <motion.h1
