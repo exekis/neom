@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AudioTrack } from "../../types/AudioTrack";
-import { TimelineCursor } from "../../components/TimelineCursor";
-import { EnhancedTrackView } from "../../components/EnhancedTrackView";
+import { SimpleTimelineUI } from "../../components/SimpleTimelineUI";
+import { OptimizedTrackView } from "../../components/OptimizedTrackView";
 import { DAWHeader } from "../../components/DAWHeader";
 import { DAWSidebar } from "../../components/DAWSidebar";
 import { ChatSidebar } from "../../components/ChatSidebar";
@@ -17,6 +17,9 @@ import { ProjectModal } from "../../components/ProjectModal";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import { useProjectManager } from "../../hooks/useProjectManager";
 import { useAudioExporter } from "../../hooks/useAudioExporter";
+import { UploadLoopsButton } from "../../components/UploadLoopsButton";
+import { PersistentChatSidebar } from "../../components/PersistentChatSidebar";
+import { AudioLibrary } from "../../components/AudioLibrary";
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -40,18 +43,22 @@ export default function DAWPage() {
   const [selectedTrackIndex, setSelectedTrackIndex] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
   const [projectName, setProjectName] = useState("Untitled Project");
   const [trackStates, setTrackStates] = useState<{ [trackId: string]: TrackState }>({});
   const [isRecording, setIsRecording] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
   const [isMetronomeEnabled, setIsMetronomeEnabled] = useState(false);
   const [masterVolume, setMasterVolume] = useState(80);
+  const [isFirstProject, setIsFirstProject] = useState(true);
+  const [hasAutoSaved, setHasAutoSaved] = useState(false);
   const [undoStack] = useState<string[]>([]);
   const [redoStack] = useState<string[]>([]);
   const [showHotkeys, setShowHotkeys] = useState(false);
   const [showWorkspace, setShowWorkspace] = useState(false);
   const [showAudioEditor, setShowAudioEditor] = useState(false);
   const [editingTrack, setEditingTrack] = useState<AudioTrack | null>(null);
+  const [showAudioLibrary, setShowAudioLibrary] = useState(true);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -66,7 +73,9 @@ export default function DAWPage() {
     seek,
     playFromClick,
     playFromLast,
-    setClickPos
+    setClickPos,
+    skipToBeginning,
+    skipToEnd
   } = useAudioPlayer({
     audioContext: audioContextRef.current
   });
@@ -145,6 +154,39 @@ export default function DAWPage() {
     initializeTrackState(newTrack.id);
   }, [tracks.length, createEmptyAudioBuffer, initializeTrackState]);
 
+  const handleSaveProject = useCallback(async (projectName: string) => {
+    const audioContext = initAudioContext();
+    await projectManager.saveProject(
+      projectName,
+      tracks,
+      trackStates,
+      masterVolume,
+      120,
+      audioContext
+    );
+    setProjectName(projectName);
+  }, [initAudioContext, projectManager, tracks, trackStates, masterVolume]);
+
+  const handleQuickSave = useCallback(async () => {
+    await handleSaveProject(projectName);
+  }, [handleSaveProject, projectName]);
+
+  // Auto-save first project when tracks are added
+  useEffect(() => {
+    if (isFirstProject && tracks.length > 0 && !hasAutoSaved) {
+      const autoSave = async () => {
+        try {
+          await handleSaveProject("My First Project");
+          setHasAutoSaved(true);
+          setIsFirstProject(false);
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        }
+      };
+      autoSave();
+    }
+  }, [tracks.length, isFirstProject, hasAutoSaved, handleSaveProject]);
+
   // Keyboard hotkeys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -156,6 +198,10 @@ export default function DAWPage() {
       // Check for Ctrl/Cmd combinations first
       if (e.ctrlKey || e.metaKey) {
         switch (e.key.toLowerCase()) {
+          case 's':
+            e.preventDefault();
+            handleQuickSave(); // Ctrl+S for save
+            break;
           case 'z':
             e.preventDefault();
             if (e.shiftKey) {
@@ -207,6 +253,18 @@ export default function DAWPage() {
           e.preventDefault();
           stop();
           break;
+        case 'Home': // Home - skip to beginning
+          e.preventDefault();
+          if (tracks.length > 0) {
+            skipToBeginning(tracks);
+          }
+          break;
+        case 'End': // End - skip to end
+          e.preventDefault();
+          if (tracks.length > 0) {
+            skipToEnd(tracks);
+          }
+          break;
         case 'q': // Q - add new track
         case 'Q':
           if (e.ctrlKey || e.metaKey) {
@@ -231,7 +289,7 @@ export default function DAWPage() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, isRecording, isLooping, handleUndo, handleRedo, addNewTrack]);
+  }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, skipToBeginning, skipToEnd, isRecording, isLooping, handleUndo, handleRedo, addNewTrack, handleQuickSave]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -241,6 +299,22 @@ export default function DAWPage() {
 
     // Load audio from sessionStorage if coming from workflow or create mock tracks
     const loadSessionAudio = async () => {
+      // Check for project parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project');
+      
+      if (projectId) {
+        try {
+          const audioContext = initAudioContext();
+          await projectManager.loadProject(projectId, audioContext);
+          setIsFirstProject(false);
+          setHasAutoSaved(true);
+          return; // Exit early if project loaded successfully
+        } catch (error) {
+          console.error('Error loading project from URL:', error);
+        }
+      }
+
       const audioUrl = sessionStorage.getItem('daw-audio-url');
       const audioName = sessionStorage.getItem('daw-audio-name');
 
@@ -281,7 +355,8 @@ export default function DAWPage() {
     };
 
     const loadMockTracks = () => {
-      const audioContext = initAudioContext();
+      // ensure audio context is initialized before creating buffers
+      initAudioContext();
       const mockTracks: AudioTrack[] = [
         {
           id: 'mock-1',
@@ -308,7 +383,7 @@ export default function DAWPage() {
     if (isLoaded && isSignedIn) {
       loadSessionAudio();
     }
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, isLoaded, initAudioContext, createEmptyAudioBufferWithDuration, initializeTrackState, projectManager]);
 
   if (!isLoaded) {
     return (
@@ -408,18 +483,6 @@ export default function DAWPage() {
     ));
   };
 
-  const handleSaveProject = async (projectName: string) => {
-    const audioContext = initAudioContext();
-    await projectManager.saveProject(
-      projectName,
-      tracks,
-      trackStates,
-      masterVolume,
-      120,
-      audioContext
-    );
-  };
-
   const handleLoadProject = async (projectId: string) => {
     const audioContext = initAudioContext();
     await projectManager.loadProject(projectId, audioContext);
@@ -473,9 +536,45 @@ export default function DAWPage() {
     }
   };
 
+  const handleAudioLibraryDrop = async (audioFile: { name: string; path: string }) => {
+    try {
+      // Load the audio file and create an AudioBuffer
+      const audioContext = initAudioContext();
+      const response = await fetch(audioFile.path);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Create a new track with the dropped audio file
+      const newTrack: AudioTrack = {
+        id: Date.now().toString(),
+        name: audioFile.name,
+        audioBuffer: audioBuffer,
+        color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
+        startTime: 0,
+        duration: audioBuffer.duration,
+      };
+      
+      setTracks(prev => [...prev, newTrack]);
+      initializeTrackState(newTrack.id);
+    } catch (error) {
+      console.error('Failed to add audio file to track:', error);
+      // Fallback to empty track
+      const newTrack: AudioTrack = {
+        id: Date.now().toString(),
+        name: audioFile.name,
+        audioBuffer: createEmptyAudioBuffer(),
+        color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
+        startTime: 0,
+        duration: 30,
+      };
+      setTracks(prev => [...prev, newTrack]);
+      initializeTrackState(newTrack.id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <DAWHeader
           projectName={projectName}
           onProjectNameChange={setProjectName}
@@ -499,26 +598,33 @@ export default function DAWPage() {
           onShowHotkeys={() => setShowHotkeys(true)}
           onShowWorkspace={() => setShowWorkspace(true)}
           onOpenProjectModal={handleOpenProjectModal}
+          onQuickSave={handleQuickSave}
           onExportWAV={handleExportWAV}
+          onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
+          onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
+          onPlayFromClick={() => tracks.length > 0 && playFromClick(tracks)}
+          showAudioLibrary={showAudioLibrary}
+          onToggleAudioLibrary={() => setShowAudioLibrary(!showAudioLibrary)}
         />
 
-        <main className="flex-1 p-4 overflow-hidden">
-          <div className="max-w-full mx-auto space-y-4 h-full flex flex-col">
+        <div className="px-4 pt-2">
+          <UploadLoopsButton
+            onUploaded={(p) => {
+              console.log('uploaded loop url', p.url);
+            }}
+          />
+        </div>
 
-            <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/40 p-5">
-              <TimelineCursor
-                currentTime={currentTime}
-                clickPosition={clickPosition}
-                lastPlayPosition={lastPlayPosition}
+        <main className="flex-1 p-6 overflow-hidden">
+          <div className="h-full flex flex-col space-y-6">
+            <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/40 p-6">
+              <SimpleTimelineUI
                 duration={Math.max(...tracks.map(track => track.startTime + track.duration), 120)}
-                isPlaying={isPlaying}
-                onSeek={seek}
-                onSetClickPosition={setClickPos}
               />
             </div>
 
-            <div className="flex-1 min-h-0 timeline-container overflow-y-auto bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-4">
-              <EnhancedTrackView
+            <div className="flex-1 min-h-0 timeline-container overflow-y-auto bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-6">
+              <OptimizedTrackView
                 tracks={tracks}
                 selectedTrackIndex={selectedTrackIndex}
                 trackStates={trackStates}
@@ -530,7 +636,8 @@ export default function DAWPage() {
                 onTrackVolumeChange={handleTrackVolumeChange}
                 onTrackNameChange={handleTrackNameChange}
                 onTrackSettings={handleOpenTrackEditor}
-                onTrackAIAgent={(trackId) => console.log('Track AI agent:', trackId)}
+                onTrackAIAgent={(trackId: string) => console.log('Track AI agent:', trackId)}
+                onAddTrack={addNewTrack}
                 currentTime={currentTime}
                 isPlaying={isPlaying}
                 onSeek={seek}
@@ -589,6 +696,19 @@ export default function DAWPage() {
         savedProjects={projectManager.savedProjects}
         currentProjectName={projectName}
         isLoading={isLoadingProjects}
+      />
+
+      {/* Audio Library */}
+      {showAudioLibrary && (
+        <AudioLibrary
+          onAddToTrack={handleAudioLibraryDrop}
+        />
+      )}
+
+      {/* Persistent Chat Sidebar */}
+      <PersistentChatSidebar
+        isCollapsed={isChatCollapsed}
+        onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
       />
     </div>
   );
