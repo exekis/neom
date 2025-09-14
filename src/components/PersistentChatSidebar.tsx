@@ -19,7 +19,7 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hey, NEOM BUILDER here. Let's craft some audio magic.",
+      text: "Hey, NEOM BUILDER here. I'm powered by AI and ready to help you craft some audio magic. What are we building today?",
       isUser: false,
       timestamp: new Date()
     }
@@ -37,52 +37,58 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: inputValue.trim(),
       isUser: true,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageText = inputValue.trim();
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response with delay
-    setTimeout(() => {
+    try {
+      // Send request to backend API
+      const response = await fetch('/api/gemini/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageText,
+          tracks: [] // TODO: Pass actual tracks from parent component if needed
+        }),
+      });
+
+      const data = await response.json();
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateResponse(inputValue),
+        text: data.success ? data.message : 'Sorry, I encountered an error. Please try again.',
         isUser: false,
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I could not process your request. Please check your connection and try again.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
-  };
-
-  const generateResponse = (input: string): string => {
-    const lowerInput = input.toLowerCase();
-
-    if (lowerInput.includes('fade')) {
-      return 'Fade effects? Easy. Pick a track, tell me fade in/out + duration. Done.';
-    } else if (lowerInput.includes('volume') || lowerInput.includes('gain')) {
-      return 'Volume tweaks coming up. Just say the dB change you need, like "+3dB" or "-6dB".';
-    } else if (lowerInput.includes('reverb')) {
-      return 'Reverb time. Got "plate", "room", or "hall" presets. What vibe you going for?';
-    } else if (lowerInput.includes('normalize')) {
-      return 'Normalize? Sure. I\'ll level out your audio to standard LUFS. Keeps everything balanced.';
-    } else if (lowerInput.includes('loop')) {
-      return 'Loops are my specialty. What genre? Punk, jazz, electronic... just say the word.';
-    } else if (lowerInput.includes('help') || lowerInput.includes('what')) {
-      return 'I build: fades, volume tweaks, reverb, normalization, loops. What are we crafting?';
-    } else {
-      return `Got it - working on "${input}". I handle fades, gain, reverb, normalize, loops. Pick your tool.`;
     }
   };
+
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, File, Play, Pause, Download, Trash2 } from "lucide-react";
 
 interface AudioFile {
   id: string;
   name: string;
-  duration: number;
-  type: 'original' | 'generated' | 'imported';
-  createdAt: Date;
+  duration?: number;
+  type: 'loop' | 'generated' | 'imported';
+  createdAt?: Date;
   url?: string;
+  file_path?: string;
+  tags?: string;
+  bpm?: number | null;
+  key?: string | null;
 }
 
 interface WorkspaceModalProps {
@@ -19,38 +23,58 @@ interface WorkspaceModalProps {
 }
 
 export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceModalProps) {
-  const [activeTab, setActiveTab] = useState<'all' | 'original' | 'generated' | 'imported'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'loop' | 'generated' | 'imported'>('all');
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [addingToTimeline, setAddingToTimeline] = useState<string | null>(null);
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for now
-  const mockAudioFiles: AudioFile[] = [
-    {
-      id: '1',
-      name: 'intro_jazz.mp3',
-      duration: 245.5,
-      type: 'imported',
-      createdAt: new Date('2024-01-15T10:30:00Z'),
-      url: '/audio/intro_jazz.mp3'
-    },
-    {
-      id: '2',
-      name: 'Generated Beat 1',
-      duration: 180.2,
-      type: 'generated',
-      createdAt: new Date('2024-01-15T14:22:00Z')
-    },
-    {
-      id: '3',
-      name: 'Vocal Recording',
-      duration: 320.8,
-      type: 'original',
-      createdAt: new Date('2024-01-15T09:15:00Z')
-    }
-  ];
+  // Fetch loops from API
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAudioFiles = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/loops');
+        const data = await response.json();
+
+        if (data.success && data.loops) {
+          // Convert loops data to AudioFile format
+          const loopFiles: AudioFile[] = data.loops.map((loop: any) => ({
+            id: loop.id,
+            name: loop.name,
+            type: 'loop' as const,
+            file_path: loop.file_path,
+            tags: loop.tags,
+            bpm: loop.bpm,
+            key: loop.key,
+            // Estimate duration based on file size or use default
+            duration: Math.random() * 60 + 30, // TODO: Get real duration from file metadata
+            createdAt: new Date() // TODO: Add created_at field to loops table
+          }));
+
+          setAudioFiles(loopFiles);
+        } else {
+          throw new Error(data.error || 'Failed to fetch audio files');
+        }
+      } catch (err) {
+        console.error('Failed to fetch audio files:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load audio files');
+        setAudioFiles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAudioFiles();
+  }, [isOpen]);
 
   const filteredFiles = activeTab === 'all'
-    ? mockAudioFiles
-    : mockAudioFiles.filter(file => file.type === activeTab);
+    ? audioFiles
+    : audioFiles.filter(file => file.type === activeTab);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -87,7 +111,7 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
         </div>
 
         <div className="flex border-b border-slate-700">
-          {(['all', 'original', 'generated', 'imported'] as const).map((tab) => (
+          {(['all', 'loop', 'generated', 'imported'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -97,17 +121,34 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {tab} {tab !== 'all' && `(${mockAudioFiles.filter(f => f.type === tab).length})`}
+              {tab === 'loop' ? 'Loops' : tab} {tab !== 'all' && `(${audioFiles.filter(f => f.type === tab).length})`}
             </button>
           ))}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {filteredFiles.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-400 mb-4"></div>
+              <p>Loading audio files...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+              <File className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-red-400">Error loading files</p>
+              <p className="text-sm mt-1">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-3 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredFiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">
               <File className="w-12 h-12 mb-4 opacity-50" />
               <p>No audio files found</p>
-              <p className="text-sm mt-1">Import or generate audio to get started</p>
+              <p className="text-sm mt-1">Upload loops to get started</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -119,7 +160,7 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <div className={`w-3 h-3 rounded-full ${
-                        file.type === 'original' ? 'bg-blue-400' :
+                        file.type === 'loop' ? 'bg-purple-400' :
                         file.type === 'generated' ? 'bg-green-400' :
                         'bg-orange-400'
                       }`} />
@@ -127,11 +168,30 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
                       <div className="flex-1 min-w-0">
                         <h3 className="text-white font-medium truncate">{file.name}</h3>
                         <div className="flex items-center gap-4 text-sm text-slate-400 mt-1">
-                          <span>{formatDuration(file.duration)}</span>
-                          <span>•</span>
+                          {file.duration && <span>{formatDuration(file.duration)}</span>}
+                          {file.duration && <span>•</span>}
                           <span className="capitalize">{file.type}</span>
-                          <span>•</span>
-                          <span>{formatDate(file.createdAt)}</span>
+                          {file.bpm && (
+                            <>
+                              <span>•</span>
+                              <span>{file.bpm} BPM</span>
+                            </>
+                          )}
+                          {file.key && (
+                            <>
+                              <span>•</span>
+                              <span>Key: {file.key}</span>
+                            </>
+                          )}
+                          {file.tags && (
+                            <>
+                              <span>•</span>
+                              <span className="truncate max-w-[200px]" title={file.tags}>
+                                {file.tags.split(',').slice(0, 3).join(', ')}
+                                {file.tags.split(',').length > 3 && '...'}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -149,10 +209,29 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
                       </button>
 
                       <button
-                        onClick={() => onAddToTimeline(file)}
-                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+                        onClick={async () => {
+                          setAddingToTimeline(file.id);
+                          try {
+                            await onAddToTimeline(file);
+                          } finally {
+                            setAddingToTimeline(null);
+                          }
+                        }}
+                        disabled={addingToTimeline === file.id}
+                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1.5 ${
+                          addingToTimeline === file.id
+                            ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                        }`}
                       >
-                        Add to Timeline
+                        {addingToTimeline === file.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-slate-300"></div>
+                            Adding...
+                          </>
+                        ) : (
+                          'Add to Timeline'
+                        )}
                       </button>
 
                       <button
@@ -181,8 +260,8 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
             <span>{filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''} shown</span>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-400" />
-                <span>Original</span>
+                <div className="w-3 h-3 rounded-full bg-purple-400" />
+                <span>Loops</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-400" />

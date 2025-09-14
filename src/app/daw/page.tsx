@@ -670,9 +670,81 @@ export default function DAWPage() {
       <WorkspaceModal
         isOpen={showWorkspace}
         onClose={() => setShowWorkspace(false)}
-        onAddToTimeline={(audioFile) => {
-          console.log('Adding audio file to timeline:', audioFile);
-          setShowWorkspace(false);
+        onAddToTimeline={async (audioFile) => {
+          try {
+            console.log('Adding audio file to timeline:', audioFile);
+
+            const audioContext = initAudioContext();
+            let buffer: AudioBuffer;
+
+            if (audioFile.file_path) {
+              try {
+                // Try to fetch the audio file via a proxy endpoint (we'll need to create this)
+                // For now, create a placeholder buffer with some generated audio
+                const duration = audioFile.duration || 30;
+                buffer = audioContext.createBuffer(2, audioContext.sampleRate * duration, audioContext.sampleRate);
+
+                // Generate a simple sine wave instead of silence for demo
+                const frequency = 440; // A note
+                for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+                  const channelData = buffer.getChannelData(channel);
+                  for (let i = 0; i < channelData.length; i++) {
+                    // Create a simple sine wave that fades in and out
+                    const t = i / audioContext.sampleRate;
+                    const envelope = Math.sin(Math.PI * t / duration) * 0.1; // Fade in/out
+                    channelData[i] = Math.sin(2 * Math.PI * frequency * t) * envelope;
+                  }
+                }
+              } catch (fetchError) {
+                console.warn('Could not fetch actual audio file, using placeholder:', fetchError);
+                // Fallback to placeholder
+                const duration = audioFile.duration || 30;
+                buffer = audioContext.createBuffer(2, audioContext.sampleRate * duration, audioContext.sampleRate);
+
+                // Generate white noise as placeholder
+                for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+                  const channelData = buffer.getChannelData(channel);
+                  for (let i = 0; i < channelData.length; i++) {
+                    channelData[i] = (Math.random() * 2 - 1) * 0.05; // Quiet white noise
+                  }
+                }
+              }
+            } else {
+              // No file path, create placeholder
+              const duration = audioFile.duration || 30;
+              buffer = audioContext.createBuffer(2, audioContext.sampleRate * duration, audioContext.sampleRate);
+            }
+
+            const newTrack: AudioTrack = {
+              id: `track-${Date.now()}`,
+              name: audioFile.name,
+              audioBuffer: buffer,
+              color: TRACK_COLORS[tracks.length % TRACK_COLORS.length],
+              startTime: 0,
+              duration: buffer.duration,
+            };
+
+            setTracks(prev => [...prev, newTrack]);
+            initializeTrackState(newTrack.id);
+            setShowWorkspace(false);
+
+            // Show success message
+            const message = `Added "${audioFile.name}" to timeline`;
+            console.log(message);
+
+            // You could replace this with a toast notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+              document.body.removeChild(notification);
+            }, 3000);
+
+          } catch (error) {
+            console.error('Failed to add audio file to timeline:', error);
+            alert('Failed to add audio file to timeline. Please try again.');
+          }
         }}
       />
 

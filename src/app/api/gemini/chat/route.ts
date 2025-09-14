@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       tracks?: Array<{name: string; duration: number}>
     };
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const systemPrompt = `You are NEOM BUILDER, a nonchalant audio crafting assistant.
 You build audio experiences with users through practical DAW operations.
