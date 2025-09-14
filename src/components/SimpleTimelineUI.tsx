@@ -95,7 +95,6 @@ export function SimpleTimelineUI({ duration }: SimpleTimelineUIProps) {
           })}
         </div>
       </div>
-
       {/* Transport Controls */}
       <div className="flex items-center justify-center gap-2">
         <button

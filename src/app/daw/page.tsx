@@ -69,7 +69,9 @@ export default function DAWPage() {
     seek,
     playFromClick,
     playFromLast,
-    setClickPos
+    setClickPos,
+    skipToBeginning,
+    skipToEnd
   } = useAudioPlayer({
     audioContext: audioContextRef.current
   });
@@ -210,6 +212,18 @@ export default function DAWPage() {
           e.preventDefault();
           stop();
           break;
+        case 'Home': // Home - skip to beginning
+          e.preventDefault();
+          if (tracks.length > 0) {
+            skipToBeginning(tracks);
+          }
+          break;
+        case 'End': // End - skip to end
+          e.preventDefault();
+          if (tracks.length > 0) {
+            skipToEnd(tracks);
+          }
+          break;
         case 'q': // Q - add new track
         case 'Q':
           if (e.ctrlKey || e.metaKey) {
@@ -234,7 +248,7 @@ export default function DAWPage() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, isRecording, isLooping, handleUndo, handleRedo, addNewTrack]);
+  }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, skipToBeginning, skipToEnd, isRecording, isLooping, handleUndo, handleRedo, addNewTrack]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -504,6 +518,9 @@ export default function DAWPage() {
           onShowWorkspace={() => setShowWorkspace(true)}
           onOpenProjectModal={handleOpenProjectModal}
           onExportWAV={handleExportWAV}
+          onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
+          onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
+          onPlayFromClick={() => tracks.length > 0 && playFromClick(tracks)}
         />
 
         <div className="px-4 pt-2">

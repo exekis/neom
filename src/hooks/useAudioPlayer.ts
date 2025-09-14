@@ -129,6 +129,43 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     setClickPosition(Math.max(0, time));
   }, []);
 
+  // Skip to beginning
+  const skipToBeginning = useCallback((tracks: AudioTrack[]) => {
+    const wasPlaying = isPlaying;
+    if (isPlaying) {
+      stop();
+    }
+    pausedAtRef.current = 0;
+    setCurrentTime(0);
+    setClickPosition(0);
+    setLastPlayPosition(0);
+    if (wasPlaying) {
+      play(tracks);
+    }
+  }, [isPlaying, stop, play]);
+
+  // Skip to end
+  const skipToEnd = useCallback((tracks: AudioTrack[]) => {
+    if (tracks.length === 0) return;
+
+    const wasPlaying = isPlaying;
+    if (isPlaying) {
+      stop();
+    }
+
+    // Calculate the maximum end time across all tracks
+    const maxEndTime = Math.max(...tracks.map(track => track.startTime + track.duration));
+
+    pausedAtRef.current = maxEndTime;
+    setCurrentTime(maxEndTime);
+    setClickPosition(maxEndTime);
+    setLastPlayPosition(maxEndTime);
+
+    if (wasPlaying) {
+      play(tracks);
+    }
+  }, [isPlaying, stop, play]);
+
   return {
     isPlaying,
     currentTime,
@@ -140,6 +177,8 @@ export function useAudioPlayer({ audioContext }: UseAudioPlayerProps) {
     seek,
     playFromClick,
     playFromLast,
-    setClickPos
+    setClickPos,
+    skipToBeginning,
+    skipToEnd
   };
 }
