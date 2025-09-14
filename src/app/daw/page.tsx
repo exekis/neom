@@ -62,18 +62,16 @@ export default function DAWPage() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const hasInitializedRef = useRef(false);
   const {
     isPlaying,
     currentTime,
-    clickPosition,
-    lastPlayPosition,
     play,
     pause,
     stop,
     seek,
     playFromClick,
     playFromLast,
-    setClickPos,
     skipToBeginning,
     skipToEnd
   } = useAudioPlayer({
@@ -155,17 +153,15 @@ export default function DAWPage() {
   }, [tracks.length, createEmptyAudioBuffer, initializeTrackState]);
 
   const handleSaveProject = useCallback(async (projectName: string) => {
-    const audioContext = initAudioContext();
     await projectManager.saveProject(
       projectName,
       tracks,
       trackStates,
       masterVolume,
-      120,
-      audioContext
+      120
     );
     setProjectName(projectName);
-  }, [initAudioContext, projectManager, tracks, trackStates, masterVolume]);
+  }, [projectManager, tracks, trackStates, masterVolume]);
 
   const handleQuickSave = useCallback(async () => {
     await handleSaveProject(projectName);
@@ -181,6 +177,9 @@ export default function DAWPage() {
           setIsFirstProject(false);
         } catch (error) {
           console.error('Auto-save failed:', error);
+          // prevent tight retry loop that causes repeated errors and slowdowns
+          setHasAutoSaved(true);
+          setIsFirstProject(false);
         }
       };
       autoSave();
@@ -292,12 +291,15 @@ export default function DAWPage() {
   }, [tracks, isPlaying, play, pause, stop, playFromClick, playFromLast, skipToBeginning, skipToEnd, isRecording, isLooping, handleUndo, handleRedo, addNewTrack, handleQuickSave]);
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
       window.location.href = '/';
       return;
     }
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
 
-    // Load audio from sessionStorage if coming from workflow or create mock tracks
+    // load audio from sessionstorage if coming from workflow or create mock tracks
     const loadSessionAudio = async () => {
       // Check for project parameter in URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -380,10 +382,8 @@ export default function DAWPage() {
       mockTracks.forEach(track => initializeTrackState(track.id));
     };
 
-    if (isLoaded && isSignedIn) {
-      loadSessionAudio();
-    }
-  }, [isSignedIn, isLoaded, initAudioContext, createEmptyAudioBufferWithDuration, initializeTrackState, projectManager]);
+    loadSessionAudio();
+  }, [isLoaded, isSignedIn, initAudioContext, createEmptyAudioBufferWithDuration, initializeTrackState, projectManager]);
 
   if (!isLoaded) {
     return (

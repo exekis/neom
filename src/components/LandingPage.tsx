@@ -67,7 +67,7 @@ const ParticlesBackground = () => {
           },
           move: {
             direction: "none",
-            enable: true,
+            enable: false,
             outModes: {
               default: "bounce",
               top: "bounce",
@@ -87,7 +87,7 @@ const ParticlesBackground = () => {
           number: {
             density: { enable: true, area: 800 },
             value: 80,
-            max: 150
+            max: 10
           },
           opacity: {
             value: 0.6,
