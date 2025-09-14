@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, use } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AudioTrack } from "../../types/AudioTrack";
 import { SimpleTimelineUI } from "../../components/SimpleTimelineUI";
@@ -20,6 +20,7 @@ import { useAudioExporter } from "../../hooks/useAudioExporter";
 import { UploadLoopsButton } from "../../components/UploadLoopsButton";
 import { PersistentChatSidebar } from "../../components/PersistentChatSidebar";
 import { AudioLibrary } from "../../components/AudioLibrary";
+import { SaveProjectsButton } from "../../components/SaveProjectsButton";
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -572,6 +573,10 @@ export default function DAWPage() {
     }
   };
 
+  const formattedProjectId = projectName.trim().replace(/\s+/g, "_").toLowerCase();
+  const { user } = useUser();
+  if (!user) return <div>Not signed in</div>;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
       <div className="flex-1 flex flex-col min-w-0">
@@ -612,6 +617,14 @@ export default function DAWPage() {
             onUploaded={(p) => {
               console.log('uploaded loop url', p.url);
             }}
+          />
+        </div>
+        <div className="p-4">
+          <SaveProjectsButton
+            projectId={formattedProjectId}
+            userId={user.id}
+            description="first project"
+            onSaved={(payload) => console.log("Saved!", payload)}
           />
         </div>
 
@@ -758,7 +771,7 @@ export default function DAWPage() {
         onUpdateTrack={handleUpdateEditedTrack}
       />
 
-      <ProjectModal
+      {/* <ProjectModal
         isOpen={showProjectModal}
         onClose={() => setShowProjectModal(false)}
         onSaveProject={handleSaveProject}
@@ -768,7 +781,7 @@ export default function DAWPage() {
         savedProjects={projectManager.savedProjects}
         currentProjectName={projectName}
         isLoading={isLoadingProjects}
-      />
+      /> */}
 
       {/* Audio Library */}
       {showAudioLibrary && (
