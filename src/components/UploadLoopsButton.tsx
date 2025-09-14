@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useUploadThing } from "@uploadthing/react";
+// import { useUploadThing } from "@uploadthing/react"; // Temporarily disabled due to import error
 import type { OurFileRouter } from "@/lib/uploadthing";
 
 interface UploadLoopsButtonProps {
@@ -13,15 +13,9 @@ export function UploadLoopsButton({ onUploaded }: UploadLoopsButtonProps) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { startUpload, isUploading } = useUploadThing("audioUploader", {
-    onClientUploadComplete: (res) => {
-      console.log("Files uploaded to UploadThing:", res);
-    },
-    onUploadError: (error: Error) => {
-      console.error("UploadThing error:", error);
-      setMessage(`Upload error: ${error.message}`);
-    },
-  });
+  // Temporarily disabled uploadthing integration due to import error
+  // Will use the original loops API for now
+  const isUploading = false;
 
   const onPick = () => inputRef.current?.click();
 
@@ -37,37 +31,25 @@ export function UploadLoopsButton({ onUploaded }: UploadLoopsButtonProps) {
       setBusy(true);
       setMessage(null);
 
-      // First, upload to UploadThing for cloud storage
-      const uploadResult = await startUpload([file]);
-
-      if (!uploadResult || uploadResult.length === 0) {
-        throw new Error('UploadThing upload failed');
-      }
-
-      const uploadedFile = uploadResult[0];
-      console.log('UploadThing result:', uploadedFile);
-
-      // Then, save metadata to our loops API (SQLite)
+      // Use the original loops API for now (will re-enable UploadThing later)
       const form = new FormData();
       form.append('file', file);
       form.append('name', file.name.replace(/\.[^/.]+$/, "")); // Remove extension
-      form.append('cloud_url', uploadedFile.url); // Save the UploadThing URL
-      form.append('file_key', uploadedFile.key); // Save the UploadThing key for management
 
       const res = await fetch('/api/loops', { method: 'POST', body: form });
       const json = await res.json();
 
       if (!res.ok || !json.success) {
-        throw new Error(json.error || 'metadata save failed');
+        throw new Error(json.error || 'upload failed');
       }
 
       onUploaded?.({
         id: json.id,
-        url: uploadedFile.url, // Use the UploadThing URL
+        url: json.file || json.url || '',
         filename: file.name
       });
 
-      setMessage('uploaded & saved');
+      setMessage('uploaded');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'upload failed';
       setMessage(msg);

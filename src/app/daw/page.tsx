@@ -74,7 +74,8 @@ export default function DAWPage() {
     playFromClick,
     playFromLast,
     skipToBeginning,
-    skipToEnd
+    skipToEnd,
+    togglePlayPause
   } = useAudioPlayer({
     audioContext: audioContextRef.current
   });
@@ -250,14 +251,10 @@ export default function DAWPage() {
             }
           }
           break;
-        case 'Enter': // Enter - play from last play position or pause
+        case 'Enter': // Enter - Toggle Play/Pause
           e.preventDefault();
           if (tracks.length > 0) {
-            if (isPlaying) {
-              pause();
-            } else {
-              playFromLast(tracks);
-            }
+            togglePlayPause(tracks);
           }
           break;
         case 'r': // R - record toggle
@@ -599,42 +596,46 @@ export default function DAWPage() {
   if (!user) return <div>Not signed in</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
-      <div className="flex-1 flex flex-col min-w-0">
-        <DAWHeader
-          projectName={projectName}
-          onProjectNameChange={setProjectName}
-          isPlaying={isPlaying}
-          isRecording={isRecording}
-          isLooping={isLooping}
-          isMetronomeEnabled={isMetronomeEnabled}
-          onPlay={() => tracks.length > 0 && play(tracks)}
-          onPause={pause}
-          onStop={stop}
-          onRecord={() => setIsRecording(!isRecording)}
-          onToggleLoop={() => setIsLooping(!isLooping)}
-          onToggleMetronome={() => setIsMetronomeEnabled(!isMetronomeEnabled)}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={undoStack.length > 0}
-          canRedo={redoStack.length > 0}
-          masterVolume={masterVolume}
-          onMasterVolumeChange={setMasterVolume}
-          onOpenAssistant={() => setIsSidebarOpen(true)}
-          onShowHotkeys={() => setShowHotkeys(true)}
-          onShowWorkspace={() => setShowWorkspace(true)}
-          onOpenProjectModal={handleOpenProjectModal}
-          onQuickSave={handleQuickSave}
-          onSaveProject={handleCombinedProjectSave}
-          projectId={formattedProjectId}
-          userId={user.id}
-          onExportWAV={handleExportWAV}
-          onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
-          onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
-          onPlayFromClick={() => tracks.length > 0 && playFromClick(tracks)}
-          showAudioLibrary={showAudioLibrary}
-          onToggleAudioLibrary={() => setShowAudioLibrary(!showAudioLibrary)}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Header spans full width */}
+      <DAWHeader
+        projectName={projectName}
+        onProjectNameChange={setProjectName}
+        isPlaying={isPlaying}
+        isRecording={isRecording}
+        isLooping={isLooping}
+        isMetronomeEnabled={isMetronomeEnabled}
+        onPlay={() => tracks.length > 0 && play(tracks)}
+        onPause={pause}
+        onStop={stop}
+        onRecord={() => setIsRecording(!isRecording)}
+        onToggleLoop={() => setIsLooping(!isLooping)}
+        onToggleMetronome={() => setIsMetronomeEnabled(!isMetronomeEnabled)}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={undoStack.length > 0}
+        canRedo={redoStack.length > 0}
+        masterVolume={masterVolume}
+        onMasterVolumeChange={setMasterVolume}
+        onOpenAssistant={() => setIsSidebarOpen(true)}
+        onShowHotkeys={() => setShowHotkeys(true)}
+        onShowWorkspace={() => setShowWorkspace(true)}
+        onOpenProjectModal={handleOpenProjectModal}
+        onQuickSave={handleQuickSave}
+        onSaveProject={handleCombinedProjectSave}
+        projectId={formattedProjectId}
+        userId={user.id}
+        onExportWAV={handleExportWAV}
+        onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
+        onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
+        onPlayFromClick={() => tracks.length > 0 && playFromClick(tracks)}
+        showAudioLibrary={showAudioLibrary}
+        onToggleAudioLibrary={() => setShowAudioLibrary(!showAudioLibrary)}
+      />
+      
+      {/* Main content area with sidebar */}
+      <div className="flex pt-20">
+        <div className="flex-1 flex flex-col min-w-0">
 
         {/* Action Buttons */}
         <div className="px-6 py-3 bg-slate-900/40 backdrop-blur-sm border-b border-slate-700/30">
@@ -653,7 +654,7 @@ export default function DAWPage() {
               <SimpleTimelineUI
                 duration={Math.max(...tracks.map(track => track.startTime + track.duration), 120)}
                 currentTime={currentTime}
-                onSeek={seek}
+                onSeek={(time) => seek(time, tracks)}
                 isPlaying={isPlaying}
               />
             </div>
@@ -675,7 +676,7 @@ export default function DAWPage() {
                 onAddTrack={addNewTrack}
                 currentTime={currentTime}
                 isPlaying={isPlaying}
-                onSeek={seek}
+                onSeek={(time) => seek(time, tracks)}
               />
             </div>
           </div>
@@ -683,7 +684,7 @@ export default function DAWPage() {
       </div>
 
       {/* DAW Sidebar Slide Panel */}
-      <div className={`fixed top-0 right-0 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed top-0 right-0 h-full z-[60] transform transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
         <DAWSidebar
@@ -695,7 +696,7 @@ export default function DAWPage() {
       {/* DAW Sidebar backdrop overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55]"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -716,7 +717,7 @@ export default function DAWPage() {
       />
 
       {/* Workspace Modal Slide Panel */}
-      <div className={`fixed top-0 right-0 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed top-0 right-0 h-full z-[60] transform transition-transform duration-300 ease-in-out ${
         showWorkspace ? 'translate-x-0' : 'translate-x-full'
       }`}>
         <WorkspaceModal
@@ -804,7 +805,7 @@ export default function DAWPage() {
       {/* Workspace backdrop overlay */}
       {showWorkspace && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55]"
           onClick={() => setShowWorkspace(false)}
         />
       )}
@@ -832,7 +833,7 @@ export default function DAWPage() {
       /> */}
 
       {/* Audio Library Slide Panel */}
-      <div className={`fixed top-0 right-0 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed top-0 right-0 h-full z-[60] transform transition-transform duration-300 ease-in-out ${
         showAudioLibrary ? 'translate-x-0' : 'translate-x-full'
       }`}>
         <AudioLibrary
@@ -843,7 +844,7 @@ export default function DAWPage() {
       {/* Backdrop overlay */}
       {showAudioLibrary && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55]"
           onClick={() => setShowAudioLibrary(false)}
         />
       )}
@@ -853,6 +854,7 @@ export default function DAWPage() {
         isCollapsed={isChatCollapsed}
         onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
       />
+      </div>
     </div>
   );
 }

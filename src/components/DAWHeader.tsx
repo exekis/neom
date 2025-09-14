@@ -139,7 +139,7 @@ export function DAWHeader({
   };
 
   return (
-    <header className="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 px-4 py-3">
+    <header className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 px-4 py-3 z-50">
       <div className="flex items-center justify-between gap-6 min-h-[48px]">
         {/* Left Side - Logo & Project Name */}
         <div className="flex items-center gap-4 min-w-0 flex-shrink-0 min-w-[200px]">

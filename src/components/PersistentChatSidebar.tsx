@@ -103,7 +103,7 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
 
   return (
     <div
-      className={`h-full bg-gray-900/95 backdrop-blur-sm border-l border-gray-700/50 transition-all duration-300 ease-in-out flex-shrink-0 ${
+      className={`h-full bg-gray-900/95 backdrop-blur-sm border-l border-gray-700/50 transition-all duration-300 ease-in-out flex-shrink-0 relative z-10 ${
         isCollapsed
           ? 'w-12'
           : 'w-[400px]'
