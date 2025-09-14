@@ -102,6 +102,7 @@ export function DAWHeader({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
 
   const handleNameSubmit = () => {
     onProjectNameChange(editName);
@@ -131,6 +132,12 @@ export function DAWHeader({
       if (onSaveProject && projectId && userId) {
         await onSaveProject(projectId, userId, `Project: ${projectName}`);
       }
+      
+      // Show saved indicator for 2 seconds
+      setShowSavedIndicator(true);
+      setTimeout(() => {
+        setShowSavedIndicator(false);
+      }, 2000);
     } catch (error) {
       console.error('Save failed:', error);
     } finally {
@@ -142,7 +149,7 @@ export function DAWHeader({
     <header className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 px-4 py-3 z-50">
       <div className="flex items-center justify-between gap-6 min-h-[48px]">
         {/* Left Side - Logo & Project Name */}
-        <div className="flex items-center gap-4 min-w-0 flex-shrink-0 min-w-[200px]">
+        <div className="flex items-center gap-4 flex-shrink-0 min-w-[200px]">
           <NeomLogo />
           {isEditingName ? (
             <input
@@ -243,11 +250,17 @@ export function DAWHeader({
             <button
               onClick={handleCombinedSave}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800 text-white rounded-md transition-colors text-xs font-medium"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all duration-300 text-xs font-medium ${
+                showSavedIndicator 
+                  ? 'bg-green-600/50 text-green-100' 
+                  : 'bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800 text-white'
+              }`}
               title="Save Project (Ctrl+S)"
             >
               <Save className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+              <span className="hidden sm:inline">
+                {showSavedIndicator ? 'Saved' : (isSaving ? 'Saving...' : 'Save')}
+              </span>
             </button>
             
             {onOpenProjectModal && (
