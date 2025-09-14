@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Upload, Send, Music } from 'lucide-react';
 import { useAudioGeneration } from '@/hooks/useAudioGenerationHardcoded';
 import GenerationProgress from '@/components/GenerationProgress';
-import WaveformModal from '@/components/WaveformModal';
 
 interface LayersWorkflowProps {
   onBack: () => void;
@@ -24,7 +23,6 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
   const [selectedBars, setSelectedBars] = useState(16);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
-  const [showWaveformModal, setShowWaveformModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -72,7 +70,6 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
   const handleSubmit = async () => {
     // Reset all audio states
     setAudioBuffer(null);
-    setShowWaveformModal(false);
     reset();
 
     // For now, use the demo original as per integration notes
@@ -127,50 +124,44 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
     }
   }, [audioUrl, isGenerating]);
 
-  // Show modal when audio is loaded
-  React.useEffect(() => {
-    if (audioBuffer && audioUrl && !isGenerating) {
-      setShowWaveformModal(true);
-    }
-  }, [audioBuffer, audioUrl, isGenerating]);
-
-  const handleOpenInDAW = async () => {
-    if (audioUrl && audioBuffer) {
-      const name = `Generated ${selectedKey} ${selectedMode.toLowerCase()} loop`;
-
-      // First upload the generated audio to cloud storage for persistence
-      try {
-        const response = await fetch(audioUrl);
-        const audioBlob = await response.blob();
-        const audioFile = new File([audioBlob], `${name}.wav`, { type: 'audio/wav' });
-
-        const formData = new FormData();
-        formData.append('file', audioFile);
-        formData.append('name', name);
-
-        const uploadResponse = await fetch('/api/loops', {
-          method: 'POST',
-          body: formData
+  const handleSendToDAW = async () => {
+    try {
+      const tracksToSend = [];
+      
+      // Process uploaded file if available
+      if (uploadedFile && audioBuffer) {
+        const uploadedAudioUrl = URL.createObjectURL(uploadedFile);
+        tracksToSend.push({
+          name: uploadedFile.name.replace(/\.[^/.]+$/, ""),
+          audioUrl: uploadedAudioUrl
         });
-
-        const uploadResult = await uploadResponse.json();
-        if (uploadResult.success) {
-          console.log('Generated audio uploaded to cloud storage:', uploadResult);
-        }
-      } catch (error) {
-        console.error('Failed to upload generated audio:', error);
       }
-
-      if (onApplyToDAW) {
-        onApplyToDAW({ audioBuffer, audioUrl, name });
-        setShowWaveformModal(false);
+      
+      // Process generated audio if available
+      if (audioUrl) {
+        const name = `Generated ${selectedKey} ${selectedMode.toLowerCase()} loop`;
+        tracksToSend.push({
+          name: name,
+          audioUrl: audioUrl
+        });
+      }
+      
+      if (tracksToSend.length === 0) {
+        console.warn('No tracks available to send to DAW');
         return;
       }
-      sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', name);
-    }
-    if (!onApplyToDAW) {
+      
+      // Store multiple tracks in sessionStorage
+      sessionStorage.setItem('daw-tracks', JSON.stringify(tracksToSend));
+      
+      // Clear any existing single track data
+      sessionStorage.removeItem('daw-audio-url');
+      sessionStorage.removeItem('daw-audio-name');
+      
+      // Navigate to DAW
       window.location.href = '/daw';
+    } catch (error) {
+      console.error('Error processing audio tracks for DAW:', error);
     }
   };
 
@@ -349,6 +340,125 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
             </motion.div>
           </div>
 
+          {/* Results Section */}
+          {(uploadedFile || audioUrl) && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="bg-slate-900/50 backdrop-blur-sm rounded-2xl p-6"
+            >
+              <h3 className="text-xl font-semibold mb-6 text-slate-200">Ready Tracks</h3>
+              
+              <div className="space-y-4">
+                {uploadedFile && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl"
+                  >
+                    <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
+                      <Music className="w-6 h-6 text-slate-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-200">{uploadedFile.name.replace(/\.[^/.]+$/, "")}</p>
+                      <p className="text-sm text-slate-400">Uploaded audio file</p>
+                    </div>
+                  </motion.div>
+                )}
+                
+                {audioUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl"
+                  >
+                    <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
+                      <Music className="w-6 h-6 text-slate-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-200">Generated {selectedKey} {selectedMode} Loop</p>
+                      <p className="text-sm text-slate-400">AI-generated audio</p>
+                    </div>
+                    {audioUrl && (
+                      <audio 
+                        controls 
+                        src={audioUrl}
+                        className="h-8 max-w-48"
+                        style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                      />
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Single Send to DAW Button */}
+          {(uploadedFile || audioUrl) && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mt-8 text-center"
+            >
+              <motion.button
+                onClick={handleSendToDAW}
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0 8px 30px rgba(100, 116, 139, 0.3)"
+                }}
+                whileTap={{ scale: 0.98 }}
+                className="px-12 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-2xl
+                         transition-all duration-300 cursor-pointer shadow-xl"
+                animate={{
+                  y: [0, -2, 0]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                {(() => {
+                  const trackCount = (uploadedFile ? 1 : 0) + (audioUrl ? 1 : 0);
+                  if (trackCount === 1) {
+                    return uploadedFile ? "Open DAW with Uploaded Track" : "Open DAW with Generated Track";
+                  } else {
+                    return "Open DAW with Both Tracks";
+                  }
+                })()}
+              </motion.button>
+              
+              <motion.p 
+                className="text-sm text-slate-400 mt-3"
+                animate={{
+                  opacity: [0.6, 1, 0.6]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                {(() => {
+                  const hasUploaded = !!uploadedFile;
+                  const hasGenerated = !!audioUrl;
+                  
+                  if (hasUploaded && hasGenerated) {
+                    return "Both uploaded and generated tracks will be loaded into the timeline";
+                  } else if (hasUploaded) {
+                    return "Your uploaded audio will be loaded into the timeline";
+                  } else if (hasGenerated) {
+                    return "Your generated loop will be loaded into the timeline";
+                  }
+                  return "Tracks ready for DAW";
+                })()}
+              </motion.p>
+            </motion.div>
+          )}
+
         </div>
       </div>
 
@@ -357,16 +467,6 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
         isGenerating={isGenerating}
         progress={progress}
         message={generationMessage}
-      />
-
-      {/* Waveform Modal */}
-      <WaveformModal
-        isOpen={showWaveformModal}
-        onClose={() => setShowWaveformModal(false)}
-        audioUrl={audioUrl}
-        audioBuffer={audioBuffer}
-        trackName={`Generated ${selectedKey} ${selectedMode} Loop`}
-        onOpenInDAW={handleOpenInDAW}
       />
     </div>
   );

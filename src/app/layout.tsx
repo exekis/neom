@@ -26,7 +26,10 @@ export default function RootLayout({
   const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   return (
     hasClerkKey ? (
-      <ClerkProvider>
+      <ClerkProvider
+        afterSignInUrl="/workflows"
+        afterSignUpUrl="/workflows"
+      >
         <html lang="en">
           <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
             {children}

@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Send, Music, Mic2, FileText } from 'lucide-react';
 import useAudioGeneration from '@/hooks/useAudioGenerationHardcoded';
 import GenerationProgress from '@/components/GenerationProgress';
-import WaveformModal from '@/components/WaveformModal';
 
 interface DescribeWorkflowProps {
   onBack: () => void;
@@ -32,7 +31,6 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
   const [isInspiring, setIsInspiring] = useState(false);
   const [currentInspireText, setCurrentInspireText] = useState('');
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
-  const [showWaveformModal, setShowWaveformModal] = useState(false);
 
   const {
     isGenerating,
@@ -62,7 +60,6 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
   const handleSubmit = async () => {
     // Reset all audio states
     setAudioBuffer(null);
-    setShowWaveformModal(false);
     reset();
 
     await generateAudio({
@@ -97,26 +94,35 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
     }
   }, [audioUrl, isGenerating]);
 
-  // Show modal when audio is loaded
-  React.useEffect(() => {
-    if (audioBuffer && audioUrl && !isGenerating) {
-      setShowWaveformModal(true);
-    }
-  }, [audioBuffer, audioUrl, isGenerating]);
-
-  const handleOpenInDAW = () => {
-    if (audioUrl && audioBuffer) {
-      const name = `Generated ${contentType} track`;
-      if (onApplyToDAW) {
-        onApplyToDAW({ audioBuffer, audioUrl, name });
-        setShowWaveformModal(false);
+  const handleSendToDAW = async () => {
+    try {
+      const tracksToSend = [];
+      
+      // Process generated audio if available
+      if (audioUrl) {
+        const name = `Generated ${contentType} track`;
+        tracksToSend.push({
+          name: name,
+          audioUrl: audioUrl
+        });
+      }
+      
+      if (tracksToSend.length === 0) {
+        console.warn('No tracks available to send to DAW');
         return;
       }
-      sessionStorage.setItem('daw-audio-url', audioUrl);
-      sessionStorage.setItem('daw-audio-name', name);
-    }
-    if (!onApplyToDAW) {
+      
+      // Store multiple tracks in sessionStorage
+      sessionStorage.setItem('daw-tracks', JSON.stringify(tracksToSend));
+      
+      // Clear any existing single track data
+      sessionStorage.removeItem('daw-audio-url');
+      sessionStorage.removeItem('daw-audio-name');
+      
+      // Navigate to DAW
       window.location.href = '/daw';
+    } catch (error) {
+      console.error('Error processing audio tracks for DAW:', error);
     }
   };
 
@@ -142,7 +148,7 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <FileText className="w-16 h-16 mx-auto mb-4 text-purple-500" />
+              <FileText className="w-16 h-16 mx-auto mb-4 text-slate-400" />
             </motion.div>
 
             <motion.h1
@@ -177,8 +183,8 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                 <button
                   onClick={handleInspireMe}
                   disabled={isInspiring}
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600
-                           hover:from-purple-700 hover:to-pink-700 py-2 px-4 rounded-lg font-semibold
+                  className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600
+                           py-2 px-4 rounded-lg font-semibold
                            transition-all duration-300 disabled:opacity-50 cursor-pointer"
                 >
                   <Sparkles className={`w-4 h-4 ${isInspiring ? 'animate-spin' : ''}`} />
@@ -193,15 +199,15 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mb-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30
-                             rounded-xl border border-purple-500/30"
+                    className="mb-4 p-4 bg-slate-800/50
+                             rounded-xl border border-slate-600/30"
                   >
                     <motion.div
                       key={currentInspireText}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-purple-300 font-medium"
+                      className="text-slate-300 font-medium"
                     >
                       {currentInspireText || "Finding inspiration..."}
                     </motion.div>
@@ -215,14 +221,14 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Describe the music you want to create..."
                   className="w-full h-32 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3
-                           text-white placeholder-slate-400 resize-none focus:ring-2 focus:ring-purple-500
-                           focus:border-purple-500 transition-colors"
+                           text-white placeholder-slate-400 resize-none focus:ring-2 focus:ring-slate-500
+                           focus:border-slate-500 transition-colors"
                 />
 
                 <button
                   onClick={handleSubmit}
                   disabled={isGenerating || !message.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700
+                  className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600
                            py-3 rounded-xl font-semibold transition-colors disabled:opacity-50
                            disabled:cursor-not-allowed cursor-pointer"
                 >
@@ -251,7 +257,7 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                       className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
                                  font-semibold transition-colors cursor-pointer ${
                         contentType === 'instrumental'
-                          ? 'bg-purple-600 text-white'
+                          ? 'bg-slate-600 text-white'
                           : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                       }`}
                     >
@@ -263,7 +269,7 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                       className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
                                  font-semibold transition-colors cursor-pointer ${
                         contentType === 'lyrics'
-                          ? 'bg-purple-600 text-white'
+                          ? 'bg-slate-600 text-white'
                           : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                       }`}
                     >
@@ -282,8 +288,8 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                         id="generateLyrics"
                         checked={generateLyrics}
                         onChange={(e) => setGenerateLyrics(e.target.checked)}
-                        className="w-4 h-4 text-purple-600 bg-slate-800 border-slate-600 rounded
-                                 focus:ring-purple-500 focus:ring-2"
+                        className="w-4 h-4 text-slate-600 bg-slate-800 border-slate-600 rounded
+                                 focus:ring-slate-500 focus:ring-2"
                       />
                       <label htmlFor="generateLyrics" className="text-sm font-medium">
                         Generate Lyrics with AI
@@ -301,7 +307,7 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                           placeholder="Describe the theme, mood, or story for the lyrics..."
                           className="w-full h-24 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3
                                    text-white placeholder-slate-400 resize-none focus:ring-2
-                                   focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                   focus:ring-slate-500 focus:border-slate-500 transition-colors"
                         />
                       </div>
                     ) : (
@@ -315,7 +321,7 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
                           placeholder="Write your own lyrics here..."
                           className="w-full h-32 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3
                                    text-white placeholder-slate-400 resize-none focus:ring-2
-                                   focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                   focus:ring-slate-500 focus:border-slate-500 transition-colors"
                         />
                       </div>
                     )}
@@ -325,6 +331,83 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
             </motion.div>
           </div>
 
+          {/* Results Section */}
+          {audioUrl && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="bg-slate-900/50 backdrop-blur-sm rounded-2xl p-6"
+            >
+              <h3 className="text-xl font-semibold mb-6 text-slate-200">Generated Track</h3>
+              
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl"
+              >
+                <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
+                  <Music className="w-6 h-6 text-slate-300" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-slate-200">Generated {contentType} track</p>
+                  <p className="text-sm text-slate-400">AI-generated audio</p>
+                </div>
+                <audio 
+                  controls 
+                  src={audioUrl}
+                  className="h-8 max-w-48"
+                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Single Send to DAW Button */}
+          {audioUrl && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mt-8 text-center"
+            >
+              <motion.button
+                onClick={handleSendToDAW}
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0 8px 30px rgba(100, 116, 139, 0.3)"
+                }}
+                whileTap={{ scale: 0.98 }}
+                className="px-12 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-2xl
+                         transition-all duration-300 cursor-pointer shadow-xl"
+                animate={{
+                  y: [0, -2, 0]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                Open DAW with Generated Track
+              </motion.button>
+              
+              <motion.p 
+                className="text-sm text-slate-400 mt-3"
+                animate={{
+                  opacity: [0.6, 1, 0.6]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                Your generated {contentType} track will be loaded into the timeline
+              </motion.p>
+            </motion.div>
+          )}
+
         </div>
       </div>
 
@@ -333,16 +416,6 @@ export function DescribeWorkflow({ onBack, onApplyToDAW }: DescribeWorkflowProps
         isGenerating={isGenerating}
         progress={progress}
         message={generationMessage}
-      />
-
-      {/* Waveform Modal */}
-      <WaveformModal
-        isOpen={showWaveformModal}
-        onClose={() => setShowWaveformModal(false)}
-        audioUrl={audioUrl}
-        audioBuffer={audioBuffer}
-        trackName={`Generated ${contentType} Track`}
-        onOpenInDAW={handleOpenInDAW}
       />
     </div>
   );

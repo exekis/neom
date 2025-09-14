@@ -336,6 +336,61 @@ export default function DAWPage() {
         }
       }
 
+      // Check for multiple tracks from workflows first
+      const tracksData = sessionStorage.getItem('daw-tracks');
+      if (tracksData) {
+        try {
+          const audioContext = initAudioContext();
+          const tracksList = JSON.parse(tracksData);
+          const newTracks: AudioTrack[] = [];
+          
+          for (let i = 0; i < tracksList.length; i++) {
+            const trackData = tracksList[i];
+            try {
+              const response = await fetch(trackData.audioUrl);
+              const arrayBuffer = await response.arrayBuffer();
+              const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+              const newTrack: AudioTrack = {
+                id: `workflow-track-${Date.now()}-${i}`,
+                name: trackData.name,
+                audioBuffer,
+                color: TRACK_COLORS[i % TRACK_COLORS.length],
+                startTime: 0,
+                duration: audioBuffer.duration,
+              };
+
+              newTracks.push(newTrack);
+            } catch (trackError) {
+              console.error(`Error loading track ${trackData.name}:`, trackError);
+              // Create placeholder track if loading fails
+              const placeholderTrack: AudioTrack = {
+                id: `placeholder-track-${Date.now()}-${i}`,
+                name: `${trackData.name} (Error)`,
+                audioBuffer: createEmptyAudioBufferWithDuration(30),
+                color: TRACK_COLORS[i % TRACK_COLORS.length],
+                startTime: 0,
+                duration: 30,
+              };
+              newTracks.push(placeholderTrack);
+            }
+          }
+
+          setTracks(newTracks);
+          newTracks.forEach(track => initializeTrackState(track.id));
+
+          // Show success message
+          console.log(`Successfully loaded ${newTracks.length} tracks from vocals workflow`);
+
+          // Clear sessionStorage after loading
+          sessionStorage.removeItem('daw-tracks');
+          return; // Exit early after loading multiple tracks
+        } catch (error) {
+          console.error('Error loading multiple tracks from workflow:', error);
+          // Fall through to single track loading
+        }
+      }
+
       const audioUrl = sessionStorage.getItem('daw-audio-url');
       const audioName = sessionStorage.getItem('daw-audio-name');
 
