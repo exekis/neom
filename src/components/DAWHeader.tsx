@@ -96,8 +96,8 @@ export function DAWHeader({
   };
 
   return (
-    <header className="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 px-6 py-3">
-      <div className="flex items-center justify-between">
+    <header className="bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 px-6 py-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <NeomLogo />
 

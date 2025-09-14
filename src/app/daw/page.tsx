@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AudioTrack } from "../../types/AudioTrack";
-import { TimelineCursor } from "../../components/TimelineCursor";
+import { SimpleTimelineUI } from "../../components/SimpleTimelineUI";
 import { EnhancedTrackView } from "../../components/EnhancedTrackView";
 import { DAWHeader } from "../../components/DAWHeader";
 import { DAWSidebar } from "../../components/DAWSidebar";
@@ -18,6 +18,7 @@ import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import { useProjectManager } from "../../hooks/useProjectManager";
 import { useAudioExporter } from "../../hooks/useAudioExporter";
 import { UploadLoopsButton } from "../../components/UploadLoopsButton";
+import { PersistentChatSidebar } from "../../components/PersistentChatSidebar";
 
 const TRACK_COLORS = [
   "#8b5cf6", // purple
@@ -41,6 +42,7 @@ export default function DAWPage() {
   const [selectedTrackIndex, setSelectedTrackIndex] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
   const [projectName, setProjectName] = useState("Untitled Project");
   const [trackStates, setTrackStates] = useState<{ [trackId: string]: TrackState }>({});
   const [isRecording, setIsRecording] = useState(false);
@@ -477,7 +479,7 @@ export default function DAWPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <DAWHeader
           projectName={projectName}
           onProjectNameChange={setProjectName}
@@ -512,22 +514,15 @@ export default function DAWPage() {
           />
         </div>
 
-        <main className="flex-1 p-4 overflow-hidden">
-          <div className="max-w-full mx-auto space-y-4 h-full flex flex-col">
-
-            <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/40 p-5">
-              <TimelineCursor
-                currentTime={currentTime}
-                clickPosition={clickPosition}
-                lastPlayPosition={lastPlayPosition}
+        <main className="flex-1 p-6 overflow-hidden">
+          <div className="h-full flex flex-col space-y-6">
+            <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/40 p-6">
+              <SimpleTimelineUI
                 duration={Math.max(...tracks.map(track => track.startTime + track.duration), 120)}
-                isPlaying={isPlaying}
-                onSeek={seek}
-                onSetClickPosition={setClickPos}
               />
             </div>
 
-            <div className="flex-1 min-h-0 timeline-container overflow-y-auto bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-4">
+            <div className="flex-1 min-h-0 timeline-container overflow-y-auto bg-slate-900/30 backdrop-blur-sm rounded-2xl border border-slate-700/30 p-6">
               <EnhancedTrackView
                 tracks={tracks}
                 selectedTrackIndex={selectedTrackIndex}
@@ -599,6 +594,12 @@ export default function DAWPage() {
         savedProjects={projectManager.savedProjects}
         currentProjectName={projectName}
         isLoading={isLoadingProjects}
+      />
+
+      {/* Persistent Chat Sidebar */}
+      <PersistentChatSidebar
+        isCollapsed={isChatCollapsed}
+        onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
       />
     </div>
   );

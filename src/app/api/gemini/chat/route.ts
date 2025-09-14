@@ -5,28 +5,30 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, tracks } = await request.json();
+    const { message, tracks } = await request.json() as {
+      message: string;
+      tracks?: Array<{name: string; duration: number}>
+    };
 
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-    const systemPrompt = `You are an AI assistant specializing in Digital Audio Workstation (DAW) operations.
-You help users with audio editing, track management, and music production tasks.
+    const systemPrompt = `You are NEOM BUILDER, a nonchalant audio crafting assistant.
+You build audio experiences with users through practical DAW operations.
 
 Current tracks in the timeline: ${tracks?.length || 0} tracks
-${tracks?.map((track: any, index: number) =>
+${tracks?.map((track, index: number) =>
   `Track ${index + 1}: ${track.name} (${track.duration.toFixed(2)}s)`
 ).join('\n') || 'No tracks loaded'}
 
-You can help with:
-- Audio editing suggestions and techniques
-- Track arrangement and mixing advice
-- Effects recommendations (reverb, delay, compression, EQ)
-- Audio production workflows
-- Troubleshooting common DAW issues
-- Creative suggestions for music composition
+You build:
+- Audio edits and effects
+- Track arrangements and mixes
+- Sound processing (reverb, delay, compression, EQ)
+- Production workflows
+- Quick DAW solutions
+- Creative audio ideas
 
-When suggesting specific actions, be practical and consider the current state of their project.
-Keep responses concise but informative, focusing on actionable advice.`;
+Keep it nonchalant and builder-focused. Short, practical responses only.`;
 
     const prompt = `${systemPrompt}\n\nUser message: ${message}`;
 
