@@ -575,20 +575,30 @@ export function LandingPage() {
             Join thousands of creators using AI to enhance their audio production workflow
           </p>
 
-          {/* If user is signed in, go straight to the studio. Otherwise open Clerk modal. */}
+          {/* If user is signed in, show startup options. Otherwise open Clerk modal. */}
           <SignedInDyn>
-            <Link href="/daw">
-              <ClerkButtonChild>
-                Enter Studio
-              </ClerkButtonChild>
-            </Link>
+            <button
+              onClick={() => setShowStartingPointModal(true)}
+              className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25"
+            >
+              <span className="relative z-10">Choose Your Path</span>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <ArrowRight className="inline-block ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+            </button>
           </SignedInDyn>
           <SignedOutDyn>
-            <SignInButtonDyn mode="modal" afterSignInUrl="/daw" afterSignUpUrl="/daw">
-              <ClerkButtonChild>
-                Enter Studio
-              </ClerkButtonChild>
-            </SignInButtonDyn>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <SignInButtonDyn mode="modal" afterSignInUrl="/" afterSignUpUrl="/">
+                <ClerkButtonChild>
+                  Get Started
+                </ClerkButtonChild>
+              </SignInButtonDyn>
+              <Link href="/daw">
+                <button className="px-6 py-3 bg-transparent border border-slate-600 text-slate-300 rounded-full font-semibold hover:bg-slate-800 hover:border-slate-500 transition-all duration-300">
+                  Try Without Account
+                </button>
+              </Link>
+            </div>
           </SignedOutDyn>
         </div>
       </section>
