@@ -5,7 +5,6 @@ const VM_BASE = process.env.NEOM_API_BASE || 'http://20.161.72.50';
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
-    console.log('Saving project:', form);
 
     // Forward the file to the VM (the real backend)
     const vmRes = await fetch(`${VM_BASE}/projects/save`, {

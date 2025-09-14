@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, use } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AudioTrack } from "../../types/AudioTrack";
 import { SimpleTimelineUI } from "../../components/SimpleTimelineUI";
@@ -573,6 +573,10 @@ export default function DAWPage() {
     }
   };
 
+  const formattedProjectId = projectName.trim().replace(/\s+/g, "_").toLowerCase();
+  const { user } = useUser();
+  if (!user) return <div>Not signed in</div>;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
       <div className="flex-1 flex flex-col min-w-0">
@@ -616,10 +620,11 @@ export default function DAWPage() {
           />
         </div>
         <div className="p-4">
-          <SaveProjectsButton 
-            onSaved={(p) => {
-              console.log('saved project', p.id);
-            }}
+          <SaveProjectsButton
+            projectId={formattedProjectId}
+            userId={user.id}
+            description="first project"
+            onSaved={(payload) => console.log("Saved!", payload)}
           />
         </div>
 

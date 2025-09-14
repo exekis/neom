@@ -3,10 +3,13 @@
 import { useState } from "react";
 
 interface SaveProjectsButtonProps {
-  onSaved?: (payload: { id: number; currTime: string }) => void;
+  projectId: string;
+  userId: string;
+  description?: string;
+  onSaved?: (payload: { id: string; currTime: string }) => void;
 }
 
-export function SaveProjectsButton({ onSaved }: SaveProjectsButtonProps) {
+export function SaveProjectsButton({ projectId, userId, description = "Test project", onSaved  }: SaveProjectsButtonProps) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -14,11 +17,10 @@ export function SaveProjectsButton({ onSaved }: SaveProjectsButtonProps) {
     try {
         setBusy(true);
         setMessage(null);
-
         const form = new FormData();
-        form.append("id", "12345"); // example
-        form.append("user_id", "anon");
-        form.append("description", "Test project");
+        form.append("id", projectId); 
+        form.append("user_id", userId); 
+        form.append("description", description);
 
         const res = await fetch("/api/projects", { method: "POST", body: form });
         const json = await res.json();
