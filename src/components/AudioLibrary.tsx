@@ -121,9 +121,9 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
   };
 
   return (
-    <div className="bg-gray-900 border-r border-gray-700 w-80 flex flex-col h-full">
+    <div className="bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 w-80 flex flex-col h-full shadow-2xl">
       {/* Header */}
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-4 border-b border-slate-700/50">
         <div className="flex items-center gap-2 mb-4">
           <Music className="w-5 h-5 text-purple-400" />
           <h2 className="text-white font-semibold">Audio Library</h2>
@@ -137,7 +137,7 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
             placeholder="Search audio files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
           />
         </div>
 
@@ -150,7 +150,7 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
               className={`px-2 py-1 text-xs rounded-md transition-colors ${
                 selectedCategory === category.id
                   ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               {category.name}
@@ -163,7 +163,7 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
       <div className="flex-1 overflow-y-auto p-2">
         {loadingFiles ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-400">Loading audio files...</div>
+            <div className="text-slate-400">Loading audio files...</div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -176,7 +176,7 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
                   key={file.path}
                   draggable
                   onDragStart={(e) => handleDragStart(e, file)}
-                  className="bg-gray-800 rounded-lg p-3 cursor-grab hover:bg-gray-750 transition-colors group"
+                  className="bg-slate-800/60 rounded-lg p-3 cursor-grab hover:bg-slate-750 transition-colors group"
                 >
                   {/* File Info */}
                   <div className="flex items-center justify-between mb-2">
@@ -184,13 +184,13 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
                       <h3 className="text-white text-sm font-medium truncate">
                         {file.name}
                       </h3>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-slate-400 text-xs">
                         {categorizeFile(file.name).join(', ') || 'Audio'}
                       </p>
                     </div>
                     <button
                       onClick={() => handlePlayPause(file.path)}
-                      className="p-1 rounded-md bg-gray-700 hover:bg-purple-600 transition-colors"
+                      className="p-1 rounded-md bg-slate-700 hover:bg-purple-600 transition-colors"
                     >
                       {isPlaying ? (
                         <Pause className="w-3 h-3 text-white" />
@@ -207,8 +207,8 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
                         key={i}
                         className={`bg-gradient-to-t transition-colors ${
                           isPlaying 
-                            ? 'from-purple-600 to-purple-400' 
-                            : 'from-gray-600 to-gray-500'
+                            ? 'from-purple-600 to-purple-400'
+                            : 'from-slate-600 to-slate-500'
                         }`}
                         style={{ 
                           height: `${height * 100}%`,
@@ -220,7 +220,7 @@ export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
                   </div>
 
                   {/* Drag Hint */}
-                  <div className="text-gray-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-slate-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                     Drag to add to track
                   </div>
                 </div>

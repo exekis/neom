@@ -81,7 +81,7 @@ export default function DAWPage() {
 
   // Initialize project manager
   const projectManager = useProjectManager({
-    onProjectLoad: (projectData) => {
+    onProjectLoad: (projectData: any) => {
       setTracks(projectData.tracks);
       setTrackStates(projectData.trackStates);
       setMasterVolume(projectData.masterVolume);
@@ -167,6 +167,27 @@ export default function DAWPage() {
   const handleQuickSave = useCallback(async () => {
     await handleSaveProject(projectName);
   }, [handleSaveProject, projectName]);
+
+  const handleCombinedProjectSave = useCallback(async (projectId: string, userId: string, description: string) => {
+    try {
+      const formData = new FormData();
+      formData.append("id", projectId);
+      formData.append("user_id", userId);
+      formData.append("description", description);
+
+      const response = await fetch("/api/projects", { method: "POST", body: formData });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "save failed");
+      }
+
+      console.log("Project saved to database:", result);
+    } catch (error) {
+      console.error("Failed to save to database:", error);
+      throw error; // Re-throw to be handled by the header
+    }
+  }, []);
 
   // Auto-save first project when tracks are added
   useEffect(() => {
@@ -604,6 +625,9 @@ export default function DAWPage() {
           onShowWorkspace={() => setShowWorkspace(true)}
           onOpenProjectModal={handleOpenProjectModal}
           onQuickSave={handleQuickSave}
+          onSaveProject={handleCombinedProjectSave}
+          projectId={formattedProjectId}
+          userId={user.id}
           onExportWAV={handleExportWAV}
           onSkipToBeginning={() => tracks.length > 0 && skipToBeginning(tracks)}
           onSkipToEnd={() => tracks.length > 0 && skipToEnd(tracks)}
@@ -612,20 +636,15 @@ export default function DAWPage() {
           onToggleAudioLibrary={() => setShowAudioLibrary(!showAudioLibrary)}
         />
 
-        <div className="px-4 pt-2">
-          <UploadLoopsButton
-            onUploaded={(p) => {
-              console.log('uploaded loop url', p.url);
-            }}
-          />
-        </div>
-        <div className="p-4">
-          <SaveProjectsButton
-            projectId={formattedProjectId}
-            userId={user.id}
-            description="first project"
-            onSaved={(payload) => console.log("Saved!", payload)}
-          />
+        {/* Action Buttons */}
+        <div className="px-6 py-3 bg-slate-900/40 backdrop-blur-sm border-b border-slate-700/30">
+          <div className="flex items-center gap-4">
+            <UploadLoopsButton
+              onUploaded={(p) => {
+                console.log('uploaded loop url', p.url);
+              }}
+            />
+          </div>
         </div>
 
         <main className="flex-1 p-6 overflow-hidden">
@@ -633,6 +652,9 @@ export default function DAWPage() {
             <div className="bg-slate-900/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/40 p-6">
               <SimpleTimelineUI
                 duration={Math.max(...tracks.map(track => track.startTime + track.duration), 120)}
+                currentTime={currentTime}
+                onSeek={seek}
+                isPlaying={isPlaying}
               />
             </div>
 
@@ -660,10 +682,23 @@ export default function DAWPage() {
         </main>
       </div>
 
-      <DAWSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      {/* DAW Sidebar Slide Panel */}
+      <div className={`fixed top-0 right-0 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <DAWSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+      </div>
+
+      {/* DAW Sidebar backdrop overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       <ChatSidebar
         isOpen={isChatOpen}
@@ -680,9 +715,13 @@ export default function DAWPage() {
         onClose={() => setShowHotkeys(false)}
       />
 
-      <WorkspaceModal
-        isOpen={showWorkspace}
-        onClose={() => setShowWorkspace(false)}
+      {/* Workspace Modal Slide Panel */}
+      <div className={`fixed top-0 right-0 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+        showWorkspace ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <WorkspaceModal
+          isOpen={showWorkspace}
+          onClose={() => setShowWorkspace(false)}
         onAddToTimeline={async (audioFile) => {
           try {
             console.log('Adding audio file to timeline:', audioFile);
@@ -759,7 +798,16 @@ export default function DAWPage() {
             alert('Failed to add audio file to timeline. Please try again.');
           }
         }}
-      />
+        />
+      </div>
+
+      {/* Workspace backdrop overlay */}
+      {showWorkspace && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20"
+          onClick={() => setShowWorkspace(false)}
+        />
+      )}
 
       <AudioEditingModal
         isOpen={showAudioEditor}
@@ -783,10 +831,20 @@ export default function DAWPage() {
         isLoading={isLoadingProjects}
       /> */}
 
-      {/* Audio Library */}
-      {showAudioLibrary && (
+      {/* Audio Library Slide Panel */}
+      <div className={`fixed top-0 right-0 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+        showAudioLibrary ? 'translate-x-0' : 'translate-x-full'
+      }`}>
         <AudioLibrary
           onAddToTrack={handleAudioLibraryDrop}
+        />
+      </div>
+
+      {/* Backdrop overlay */}
+      {showAudioLibrary && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-20"
+          onClick={() => setShowAudioLibrary(false)}
         />
       )}
 

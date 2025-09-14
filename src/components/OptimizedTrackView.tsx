@@ -144,6 +144,7 @@ export const OptimizedTrackView = memo(function OptimizedTrackView({
             currentTime={currentTime}
             isPlaying={isPlaying}
             pixelsPerSecond={60}
+            onSeek={onSeek}
           />
         ))}
       </div>

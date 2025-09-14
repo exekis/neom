@@ -95,11 +95,8 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
     setPlayingId(playingId === fileId ? null : fileId);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col">
+    <div className="bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 w-[600px] flex flex-col h-full shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-slate-700">
           <h2 className="text-xl font-bold text-white">Audio Workspace</h2>
           <button
@@ -274,7 +271,6 @@ export function WorkspaceModal({ isOpen, onClose, onAddToTimeline }: WorkspaceMo
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

@@ -37,10 +37,31 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
     reset
   } = useAudioGeneration();
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setUploadedFile(file);
+
+      // Upload to cloud storage using the loops API
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', file.name.replace(/\.[^/.]+$/, "")); // Remove extension
+
+        const response = await fetch('/api/loops', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          console.log('File uploaded to cloud storage:', result);
+        } else {
+          console.error('Upload failed:', result.error);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
     }
   };
 
@@ -113,9 +134,33 @@ export function LayersWorkflow({ onBack, onApplyToDAW }: LayersWorkflowProps) {
     }
   }, [audioBuffer, audioUrl, isGenerating]);
 
-  const handleOpenInDAW = () => {
+  const handleOpenInDAW = async () => {
     if (audioUrl && audioBuffer) {
       const name = `Generated ${selectedKey} ${selectedMode.toLowerCase()} loop`;
+
+      // First upload the generated audio to cloud storage for persistence
+      try {
+        const response = await fetch(audioUrl);
+        const audioBlob = await response.blob();
+        const audioFile = new File([audioBlob], `${name}.wav`, { type: 'audio/wav' });
+
+        const formData = new FormData();
+        formData.append('file', audioFile);
+        formData.append('name', name);
+
+        const uploadResponse = await fetch('/api/loops', {
+          method: 'POST',
+          body: formData
+        });
+
+        const uploadResult = await uploadResponse.json();
+        if (uploadResult.success) {
+          console.log('Generated audio uploaded to cloud storage:', uploadResult);
+        }
+      } catch (error) {
+        console.error('Failed to upload generated audio:', error);
+      }
+
       if (onApplyToDAW) {
         onApplyToDAW({ audioBuffer, audioUrl, name });
         setShowWaveformModal(false);
