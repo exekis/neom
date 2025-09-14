@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Wrench, ChevronRight, ChevronLeft } from "lucide-react";
+import { aiRouteAndRun, AiRunResponse } from "@/lib/neom";
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  audioResult?: AiRunResponse;
 }
 
 interface PersistentChatSidebarProps {
@@ -19,7 +21,7 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hey, NEOM BUILDER here. I'm powered by AI and ready to help you craft some audio magic. What are we building today?",
+      text: "Ready to process your audio. Tell me what you want to do - add loops, adjust volume, apply effects, etc.",
       isUser: false,
       timestamp: new Date()
     }
@@ -53,33 +55,100 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
     setIsTyping(true);
 
     try {
-      // Send request to backend API
-      const response = await fetch('/api/gemini/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: messageText,
-          tracks: [] // TODO: Pass actual tracks from parent component if needed
-        }),
-      });
+      // Check if VM API is configured
+      const vmBase = process.env.NEXT_PUBLIC_NEOM_API_BASE;
+      if (!vmBase) {
+        throw new Error('VM API base URL not configured. Please set NEXT_PUBLIC_NEOM_API_BASE');
+      }
 
-      const data = await response.json();
+      console.log('Attempting to call VM API at:', vmBase);
+
+      let routeResult;
+
+      try {
+        // Try route_and_run first (uses Gemini for natural language processing)
+        const routeResponse = await fetch('/api/vm-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            endpoint: '/route_and_run',
+            projectId: 'demo1',
+            originalPath: '/srv/neom/files/demo1/try1.wav',
+            text: messageText,
+            chooseRandomLoop: false
+          })
+        });
+
+        if (routeResponse.ok) {
+          routeResult = await routeResponse.json();
+        } else {
+          throw new Error(`Route and run failed: ${routeResponse.status}`);
+        }
+      } catch (routeError) {
+        console.log('Route and run failed, falling back to direct processing:', routeError);
+
+        // Fallback to run_direct with a default loop
+        const directResponse = await fetch('/api/vm-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            endpoint: '/run_direct',
+            projectId: 'demo1',
+            originalPath: '/srv/neom/files/demo1/try1.wav',
+            loopFileName: 'jazz_guitar_loop_wav_485389.wav',
+            startSec: 0.5,
+            gainDb: messageText.includes('gain') ? (messageText.includes('increase') ? 3 : -3) : -6,
+            outName: 'modified.wav',
+            prompt: messageText
+          })
+        });
+
+        if (!directResponse.ok) {
+          throw new Error(`API returned ${directResponse.status}: ${await directResponse.text()}`);
+        }
+
+        routeResult = await directResponse.json();
+      }
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.success ? data.message : 'Sorry, I encountered an error. Please try again.',
+        text: `✅ Audio processed: "${messageText}"`,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        audioResult: {
+          modifiedUrl: routeResult.modifiedUrl,
+          manifestUrl: routeResult.manifestUrl,
+          runId: routeResult.runId,
+          projectId: routeResult.projectId,
+          outName: routeResult.outName
+        }
       };
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('Failed to process audio:', error);
+
+      let errorText = 'Unknown error';
+      if (error instanceof Error) {
+        errorText = error.message;
+      } else if (typeof error === 'string') {
+        errorText = error;
+      }
+
+      // More specific error messages
+      if (errorText.includes('NetworkError') || errorText.includes('fetch')) {
+        errorText = `Network error: Cannot reach VM at ${process.env.NEXT_PUBLIC_NEOM_API_BASE}`;
+      } else if (errorText.includes('404')) {
+        errorText = `Endpoint not found on VM`;
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Sorry, I could not process your request. Please check your connection and try again.',
+        text: `❌ ${errorText}`,
         isUser: false,
         timestamp: new Date()
       };
@@ -99,6 +168,10 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getVmBaseUrl = () => {
+    return process.env.NEXT_PUBLIC_NEOM_API_BASE || "";
   };
 
   return (
@@ -145,6 +218,30 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
                   }`}
                 >
                   <p className="text-sm">{message.text}</p>
+
+                  {/* Audio Player for AI responses with audio results */}
+                  {!message.isUser && message.audioResult && (
+                    <div className="mt-3 space-y-2">
+                      <audio
+                        controls
+                        src={`${getVmBaseUrl()}${message.audioResult.modifiedUrl}`}
+                        className="w-full h-8"
+                        style={{ filter: 'invert(1)' }}
+                      />
+                      <div className="flex items-center justify-between text-xs text-gray-400">
+                        <span>Run ID: {message.audioResult.runId}</span>
+                        <a
+                          href={`${getVmBaseUrl()}${message.audioResult.manifestUrl}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline hover:text-gray-300"
+                        >
+                          View details
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
                   <div className={`text-xs mt-1 opacity-70 ${
                     message.isUser ? 'text-blue-100' : 'text-gray-400'
                   }`}>
@@ -177,8 +274,8 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="What are we building today?"
+                onKeyDown={handleKeyPress}
+                placeholder="Describe what you want (e.g., 'add punk guitar at 2s')..."
                 className="flex-1 bg-gray-700 text-white placeholder-gray-400 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-gray-600"
               />
               <button

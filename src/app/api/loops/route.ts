@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const VM_BASE = process.env.NEOM_API_BASE || 'http://20.161.72.50:8001';
+// robustly derive vm api base from env and ensure single /api prefix
+// all code comments are lowercase and end with no period
+function getVmApiBase(): string {
+  const pub = process.env.NEXT_PUBLIC_NEOM_API_BASE;
+  const srv = process.env.NEOM_API_BASE;
+  const raw = (pub || srv || 'http://20.161.72.50').trim();
+  const noSlash = raw.replace(/\/$/, '');
+  // if it already ends with /api, keep it, else append
+  const withApi = /\/api$/i.test(noSlash) ? noSlash : `${noSlash}/api`;
+  return withApi;
+}
+
+const VM_BASE = getVmApiBase();
 
 export async function GET() {
   try {
