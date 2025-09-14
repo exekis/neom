@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Music, Search, Filter, Play, Pause, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Music, Search, Play, Pause } from 'lucide-react';
 
 interface AudioFile {
   name: string;
@@ -13,10 +12,9 @@ interface AudioFile {
 
 interface AudioLibraryProps {
   onDragStart?: (audioFile: AudioFile) => void;
-  onAddToTrack?: (audioFile: AudioFile) => void;
 }
 
-export function AudioLibrary({ onDragStart, onAddToTrack }: AudioLibraryProps) {
+export function AudioLibrary({ onDragStart }: AudioLibraryProps) {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -37,7 +35,7 @@ export function AudioLibrary({ onDragStart, onAddToTrack }: AudioLibraryProps) {
   ];
 
   // Predefined audio files from the loops directory
-  const predefinedFiles = [
+  const predefinedFiles = useMemo(() => [
     'acoustic_jazz_loop_wav_548171.wav',
     'bgm_blues_guitar_loop_721148.wav',
     'bossa_guitar2_wav_74194.wav',
@@ -55,18 +53,19 @@ export function AudioLibrary({ onDragStart, onAddToTrack }: AudioLibraryProps) {
     'swing_120_bpm_mp3_640922.wav',
     'bass_walk_down_fill_wav_799359.wav',
     'double_bass_walking_613387.wav',
-  ];
+  ], []);
 
   useEffect(() => {
     // Initialize audio files
     const files: AudioFile[] = predefinedFiles.map(filename => ({
       name: filename.replace(/\.(wav|mp3|m4a)$/, '').replace(/_/g, ' '),
-      path: `/htn-2025/tracks/loops/${filename}`,
+      // stream via api to ensure proper headers and range support
+      path: `/api/loops/stream?file=${encodeURIComponent(filename)}`,
     }));
     
     setAudioFiles(files);
     setLoadingFiles(false);
-  }, []);
+  }, [predefinedFiles]);
 
   const categorizeFile = (filename: string): string[] => {
     const name = filename.toLowerCase();
@@ -168,7 +167,7 @@ export function AudioLibrary({ onDragStart, onAddToTrack }: AudioLibraryProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredFiles.map((file, index) => {
+            {filteredFiles.map((file) => {
               const waveform = generateWaveform(file.name);
               const isPlaying = playingFile === file.path;
               
