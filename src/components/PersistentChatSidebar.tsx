@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Wrench, ChevronRight, ChevronLeft } from "lucide-react";
-import { aiRouteAndRun, AiRunResponse } from "@/lib/neom";
+import { AiRunResponse } from "@/lib/neom";
 
 interface Message {
   id: string;
@@ -15,13 +15,14 @@ interface Message {
 interface PersistentChatSidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  onAudioProcessed?: (audioUrl: string, description: string) => void;
 }
 
-export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: PersistentChatSidebarProps) {
+export function PersistentChatSidebar({ isCollapsed, onToggleCollapse, onAudioProcessed }: PersistentChatSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Ready to process your audio. Tell me what you want to do - add loops, adjust volume, apply effects, etc.",
+      text: "Ready to process your DAW audio! Commands will be applied to the main track. Try: 'increase gain by 8db', 'add reverb', 'fade out', 'normalize'.",
       isUser: false,
       timestamp: new Date()
     }
@@ -63,69 +64,34 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
 
       console.log('Attempting to call VM API at:', vmBase);
 
-      let routeResult;
+      // Use local FFmpeg processor for REAL audio processing
+      const localResponse = await fetch('/api/local-ffmpeg', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: messageText
+        })
+      });
 
-      try {
-        // Try route_and_run first (uses Gemini for natural language processing)
-        const routeResponse = await fetch('/api/vm-proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: '/route_and_run',
-            projectId: 'demo1',
-            originalPath: '/srv/neom/files/demo1/try1.wav',
-            text: messageText,
-            chooseRandomLoop: false
-          })
-        });
+      if (!localResponse.ok) {
+        throw new Error(`Local processing failed: ${localResponse.status}`);
+      }
 
-        if (routeResponse.ok) {
-          routeResult = await routeResponse.json();
-        } else {
-          throw new Error(`Route and run failed: ${routeResponse.status}`);
-        }
-      } catch (routeError) {
-        console.log('Route and run failed, falling back to direct processing:', routeError);
+      const routeResult = await localResponse.json();
 
-        // Fallback to run_direct with a default loop
-        const directResponse = await fetch('/api/vm-proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: '/run_direct',
-            projectId: 'demo1',
-            originalPath: '/srv/neom/files/demo1/try1.wav',
-            loopFileName: 'jazz_guitar_loop_wav_485389.wav',
-            startSec: 0.5,
-            gainDb: messageText.includes('gain') ? (messageText.includes('increase') ? 3 : -3) : -6,
-            outName: 'modified.wav',
-            prompt: messageText
-          })
-        });
-
-        if (!directResponse.ok) {
-          throw new Error(`API returned ${directResponse.status}: ${await directResponse.text()}`);
-        }
-
-        routeResult = await directResponse.json();
+      // Send processed audio to main DAW instead of displaying in chat
+      if (onAudioProcessed && routeResult.modifiedUrl) {
+        onAudioProcessed(routeResult.modifiedUrl, routeResult.description);
       }
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: `✅ Audio processed: "${messageText}"`,
+        text: `${routeResult.description || 'Audio processed'}: "${messageText}"`,
         isUser: false,
-        timestamp: new Date(),
-        audioResult: {
-          modifiedUrl: routeResult.modifiedUrl,
-          manifestUrl: routeResult.manifestUrl,
-          runId: routeResult.runId,
-          projectId: routeResult.projectId,
-          outName: routeResult.outName
-        }
+        timestamp: new Date()
+        // Removed audioResult - no player in chat anymore
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -219,28 +185,7 @@ export function PersistentChatSidebar({ isCollapsed, onToggleCollapse }: Persist
                 >
                   <p className="text-sm">{message.text}</p>
 
-                  {/* Audio Player for AI responses with audio results */}
-                  {!message.isUser && message.audioResult && (
-                    <div className="mt-3 space-y-2">
-                      <audio
-                        controls
-                        src={`${getVmBaseUrl()}${message.audioResult.modifiedUrl}`}
-                        className="w-full h-8"
-                        style={{ filter: 'invert(1)' }}
-                      />
-                      <div className="flex items-center justify-between text-xs text-gray-400">
-                        <span>Run ID: {message.audioResult.runId}</span>
-                        <a
-                          href={`${getVmBaseUrl()}${message.audioResult.manifestUrl}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline hover:text-gray-300"
-                        >
-                          View details
-                        </a>
-                      </div>
-                    </div>
-                  )}
+                  {/* No audio player in chat - audio gets sent to main DAW */}
 
                   <div className={`text-xs mt-1 opacity-70 ${
                     message.isUser ? 'text-blue-100' : 'text-gray-400'

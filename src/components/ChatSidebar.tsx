@@ -217,7 +217,7 @@ export function ChatSidebar({ isOpen, onClose, tracks = [], onAddTrackFromAI }: 
 
         const successMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          text: "✅ Successfully generated and added the audio track to your timeline! You can now edit, move, and process it like any other track.",
+          text: "Successfully generated and added the audio track to your timeline! You can now edit, move, and process it like any other track.",
           isUser: false,
           timestamp: new Date(),
         };

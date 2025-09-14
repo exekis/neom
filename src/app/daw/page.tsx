@@ -908,6 +908,51 @@ export default function DAWPage() {
       <PersistentChatSidebar
         isCollapsed={isChatCollapsed}
         onToggleCollapse={() => setIsChatCollapsed(!isChatCollapsed)}
+        onAudioProcessed={(audioUrl, description) => {
+          // Replace the current track with processed audio
+          console.log('Replacing track with processed audio:', audioUrl, description);
+
+          // Find the first track and replace its audio
+          if (tracks.length > 0) {
+            const updatedTracks = [...tracks];
+
+            // Create a new audio element to load the processed audio
+            const audio = new Audio(audioUrl);
+            audio.onloadedmetadata = async () => {
+              try {
+                const audioContext = initAudioContext();
+                const response = await fetch(audioUrl);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                // Update the first track with the new audio buffer
+                updatedTracks[0] = {
+                  ...updatedTracks[0],
+                  audioBuffer,
+                  duration: audioBuffer.duration,
+                  name: `${updatedTracks[0].name} (${description})`
+                };
+
+                setTracks(updatedTracks);
+                console.log('Track updated with processed audio');
+
+                // Show a notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-24 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                notification.textContent = `${description}`;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                  if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                  }
+                }, 3000);
+
+              } catch (error) {
+                console.error('Failed to load processed audio:', error);
+              }
+            };
+          }
+        }}
       />
       </div>
     </div>
