@@ -275,3 +275,8 @@ src/
 ## Single Source of Truth
 
 **CRITICAL**: Endpoints, DSL schema, router templates, and file layout above are canonical. Do not add endpoints or operations without group sign-off.
+
+## Writing conventions
+
+- Almost never use semicolons (`;`) in prose. Use one only in very rare cases when absolutely necessary. Prefer a full stop, comma, or rewritten sentence.
+- Use the `humanizer` skill at `/Users/exekis/files/agents/SKILLS/humanizer/SKILL.md` when drafting, rewriting, or polishing emails, messages, and similar correspondence. Preserve Kiarash's voice, meaning, and level of formality.
